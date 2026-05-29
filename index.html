@@ -1,613 +1,628 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>GPS Land Measure Pro</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--primary:#00d4aa;--primary-dark:#00a882;--accent:#ff6b35;--accent2:#ffd700;--bg-dark:#0a0e1a;--bg-card:rgba(14,20,38,0.97);--border:rgba(0,212,170,0.22);--border-bright:rgba(0,212,170,0.55);--text:#e8f4f0;--text-dim:rgba(232,244,240,0.55);--text-bright:#fff;--danger:#ff4757;--warning:#ffa502;--shadow:0 4px 24px rgba(0,0,0,0.65);--shadow-glow:0 0 20px rgba(0,212,170,0.22);--font:'Rajdhani',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px}
+:root{--p:#00d4aa;--pd:#00a882;--a:#ff6b35;--a2:#ffd700;--bg:#0a0e1a;--card:rgba(14,20,38,0.97);--b:rgba(0,212,170,0.22);--bb:rgba(0,212,170,0.55);--t:#e8f4f0;--td:rgba(232,244,240,0.55);--tb:#fff;--d:#ff4757;--w:#ffa502;--sh:0 4px 24px rgba(0,0,0,0.65);--sg:0 0 20px rgba(0,212,170,0.22);--f:'Rajdhani',sans-serif;--m:'JetBrains Mono',monospace;--r:12px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-dark);font-family:var(--font);color:var(--text)}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--f);color:var(--t)}
 #map{position:absolute;inset:0;z-index:0;cursor:crosshair!important}
 .leaflet-container{cursor:crosshair!important}
 .leaflet-control-attribution{font-size:9px!important;opacity:0.4;background:rgba(0,0,0,0.4)!important;color:#aaa!important}
 .leaflet-control-zoom{display:none!important}
-.mm{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--primary);border:2.5px solid #fff;color:#0a0e1a;font-family:var(--font);font-weight:700;font-size:12px;box-shadow:0 2px 12px rgba(0,212,170,0.5),0 0 0 4px rgba(0,212,170,0.12);cursor:pointer;transition:transform 0.15s}
+.mm{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--p);border:2.5px solid #fff;color:#0a0e1a;font-family:var(--f);font-weight:700;font-size:12px;box-shadow:0 2px 12px rgba(0,212,170,0.5),0 0 0 4px rgba(0,212,170,0.12);cursor:pointer;transition:transform 0.15s}
 .mm:hover{transform:scale(1.15)}
-.mm.sel{background:var(--accent);box-shadow:0 2px 12px rgba(255,107,53,0.6)}
-.dist-lbl{background:rgba(10,14,26,0.88)!important;border:1px solid rgba(0,212,170,0.5)!important;color:var(--primary)!important;font-family:var(--mono)!important;font-size:10px!important;padding:2px 6px!important;border-radius:4px!important;white-space:nowrap!important;font-weight:500!important;box-shadow:0 2px 8px rgba(0,0,0,0.5)!important;pointer-events:none!important}
-.ang-lbl{background:rgba(10,14,26,0.88)!important;border:1px solid rgba(255,215,0,0.35)!important;color:var(--accent2)!important;font-family:var(--mono)!important;font-size:10px!important;padding:2px 5px!important;border-radius:4px!important;white-space:nowrap!important;pointer-events:none!important}
+.mm.sel{background:var(--a);box-shadow:0 2px 12px rgba(255,107,53,0.6)}
+.dist-lbl{background:rgba(10,14,26,0.9)!important;border:1px solid rgba(0,212,170,0.5)!important;color:var(--p)!important;font-family:var(--m)!important;font-size:10px!important;padding:2px 6px!important;border-radius:4px!important;white-space:nowrap!important;font-weight:500!important;pointer-events:none!important}
+.ang-lbl{background:rgba(10,14,26,0.9)!important;border:1px solid rgba(255,215,0,0.35)!important;color:var(--a2)!important;font-family:var(--m)!important;font-size:10px!important;padding:2px 5px!important;border-radius:4px!important;white-space:nowrap!important;pointer-events:none!important}
 .dist-lbl::before,.dist-lbl::after,.ang-lbl::before,.ang-lbl::after{display:none!important}
 #topbar{position:absolute;top:0;left:0;right:0;z-index:1000;padding:10px 10px 0;display:flex;gap:8px;align-items:flex-start}
-.icon-btn{width:42px;height:42px;border-radius:var(--r);flex-shrink:0;background:var(--bg-card);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow);transition:all 0.15s ease}
-.icon-btn:hover{border-color:var(--border-bright)}
-#search-wrap{flex:1;position:relative}
-#search-box{display:flex;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);overflow:visible;box-shadow:var(--shadow);position:relative}
-#search-icon{padding:0 10px;color:var(--primary);font-size:16px;flex-shrink:0}
-#search-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:15px;padding:10px 0;letter-spacing:0.02em}
-#search-input::placeholder{color:var(--text-dim)}
-#search-clear{padding:0 10px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;flex-shrink:0}
-#search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.8);overflow:hidden;z-index:3000;display:none;max-height:380px;overflow-y:auto}
-.sr-item{padding:11px 14px;border-bottom:1px solid rgba(0,212,170,0.07);cursor:pointer;transition:background 0.1s}
-.sr-item:hover{background:rgba(0,212,170,0.09)}
-.sr-item:last-child{border-bottom:none}
-.sr-main{font-weight:600;font-size:14px;color:var(--text-bright);margin-bottom:2px}
-.sr-sec{color:var(--text-dim);font-size:11px;line-height:1.4}
-.sr-badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-family:var(--mono);font-weight:700;letter-spacing:0.06em;margin-top:3px}
-.badge-g{background:rgba(66,133,244,0.2);color:#4285f4;border:1px solid rgba(66,133,244,0.35)}
-.badge-coords{background:rgba(255,215,0,0.15);color:var(--accent2);border:1px solid rgba(255,215,0,0.3)}
-.sr-noresult{padding:14px;color:var(--text-dim);font-size:13px;text-align:center}
-.sr-tip{padding:10px 14px;font-size:11px;color:rgba(255,107,53,0.8);background:rgba(255,107,53,0.06);border-top:1px solid rgba(255,107,53,0.15);line-height:1.6}
-#layer-wrap{position:relative}
-#layer-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);min-width:130px;display:none;z-index:2000}
-.layer-item{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;font-family:var(--font)}
-.layer-item:hover{background:rgba(0,212,170,0.08)}
-.layer-item.active{color:var(--primary);background:rgba(0,212,170,0.1);font-weight:700}
+.ib{width:42px;height:42px;border-radius:var(--r);flex-shrink:0;background:var(--card);border:1px solid var(--b);color:var(--t);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--sh);transition:all 0.15s}
+.ib:hover{border-color:var(--bb)}
+#sw{flex:1;position:relative}
+#sb{display:flex;align-items:center;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+#si-icon{padding:0 10px;color:var(--p);font-size:16px;flex-shrink:0;min-width:36px;display:flex;align-items:center;justify-content:center}
+#si{flex:1;background:none;border:none;outline:none;color:var(--t);font-family:var(--f);font-size:15px;padding:10px 0;letter-spacing:0.02em}
+#si::placeholder{color:var(--td)}
+#sc{padding:0 10px;background:none;border:none;color:var(--td);cursor:pointer;font-size:18px}
+#sr{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--bb);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,0.85);overflow:hidden;z-index:3000;display:none;max-height:400px;overflow-y:auto}
+.ri{padding:11px 14px;border-bottom:1px solid rgba(0,212,170,0.07);cursor:pointer;transition:background 0.1s}
+.ri:hover{background:rgba(0,212,170,0.09)}
+.ri:last-child{border-bottom:none}
+.r-main{font-weight:600;font-size:14px;color:var(--tb);margin-bottom:2px}
+.r-sec{color:var(--td);font-size:11px;line-height:1.4}
+.r-src{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-family:var(--m);font-weight:700;margin-top:3px}
+.src-g{background:rgba(66,133,244,0.18);color:#4285f4;border:1px solid rgba(66,133,244,0.3)}
+.src-c{background:rgba(255,215,0,0.15);color:var(--a2);border:1px solid rgba(255,215,0,0.3)}
+.src-o{background:rgba(0,212,170,0.15);color:var(--p);border:1px solid rgba(0,212,170,0.3)}
+.r-none{padding:14px;color:var(--td);font-size:13px;text-align:center}
+.r-tip{padding:10px 14px;font-size:11px;color:rgba(255,107,53,0.85);background:rgba(255,107,53,0.06);line-height:1.7}
+.r-hdr{padding:6px 14px;font-size:10px;font-weight:700;color:var(--td);letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,212,170,0.04);border-bottom:1px solid var(--b)}
+#lw{position:relative}
+#ld{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);min-width:130px;display:none;z-index:2000}
+.li{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;font-family:var(--f)}
+.li:hover{background:rgba(0,212,170,0.08)}
+.li.active{color:var(--p);background:rgba(0,212,170,0.1);font-weight:700}
 #tools{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:1000}
-.tool-btn{width:46px;height:46px;border-radius:10px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:var(--shadow);transition:all 0.15s ease;font-family:var(--font);font-size:18px}
-.tool-btn:disabled{opacity:0.3;cursor:not-allowed}
-.tool-btn:not(:disabled):hover{border-color:var(--border-bright);transform:scale(1.04)}
-.tool-btn .tlbl{font-size:9px;letter-spacing:0.05em;opacity:0.65}
-.tool-btn.danger{color:var(--danger)}
-.tool-btn.warn{color:var(--warning)}
-.tool-btn.primary{color:var(--primary)}
-.tool-btn.gold{color:var(--accent2)}
-.tool-btn.active{background:rgba(0,212,170,0.12);border-color:var(--primary)}
-.tool-sep{height:1px;background:rgba(0,212,170,0.12);margin:4px 0}
-#measure-panel{position:absolute;bottom:80px;left:10px;z-index:1000;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:14px;padding:12px 16px;min-width:200px;box-shadow:var(--shadow),var(--shadow-glow);display:none}
-.mp-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px}
-.mp-title{font-weight:700;font-size:13px;color:var(--primary);letter-spacing:0.07em;text-transform:uppercase}
-.mp-badge{margin-left:auto;background:var(--primary);color:var(--bg-dark);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--mono)}
-.metric{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
-.m-lbl{font-size:10px;font-family:var(--font);letter-spacing:0.08em;color:var(--text-dim);font-weight:600;flex-shrink:0;text-transform:uppercase}
-.m-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);text-align:right}
-.m-val.big{font-size:15px;font-weight:700;color:var(--primary)}
-.m-val.sqft{color:var(--accent2);font-size:13px;font-weight:700}
-.mp-sep{height:1px;background:var(--border);margin:4px 0 6px}
-#coord-drawer{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--bg-card);border-top:1px solid var(--border-bright);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:45vh;display:none;flex-direction:column}
-#saved-drawer{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--bg-card);border-top:1px solid rgba(255,215,0,0.3);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:60vh;display:none;flex-direction:column}
-.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;flex-shrink:0;border-bottom:1px solid var(--border)}
-.drawer-title{font-weight:700;font-size:14px;letter-spacing:0.06em;text-transform:uppercase}
-.drawer-close{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:22px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.drawer-body{overflow-y:auto;flex:1}
-.coord-head{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:6px 16px;border-bottom:1px solid rgba(0,212,170,0.07);flex-shrink:0}
-.ch{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font)}
-.coord-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(0,212,170,0.04);cursor:pointer;transition:background 0.1s}
-.coord-row:hover{background:rgba(0,212,170,0.05)}
-.coord-row.sel{background:rgba(0,212,170,0.1)}
-.pt-badge{width:22px;height:22px;border-radius:50%;background:var(--primary);color:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--font);flex-shrink:0}
-.pt-badge.sel{background:var(--accent)}
-.coord-val{font-family:var(--mono);font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.empty-msg{padding:24px 16px;color:var(--text-dim);font-size:13px;text-align:center;line-height:1.6}
-.saved-item{padding:12px 16px;border-bottom:1px solid rgba(0,212,170,0.05)}
-.si-name{font-weight:700;font-size:15px;color:var(--text-bright)}
-.si-meta{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px}
-.si-area{font-family:var(--mono);font-size:12px;color:var(--primary);font-weight:600}
-.si-sqft{font-family:var(--mono);font-size:11px;color:var(--accent2)}
-.si-btns{display:flex;gap:6px;margin-top:8px}
-.si-btn{flex:1;padding:6px 0;border-radius:7px;font-family:var(--font);font-weight:600;font-size:12px;letter-spacing:0.04em;cursor:pointer;transition:all 0.12s}
-.si-btn-load{background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.3);color:var(--primary)}
-.si-btn-exp{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--accent2)}
-.si-btn-del{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--danger)}
-#save-modal{position:absolute;inset:0;z-index:2000;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;padding:16px}
-.modal-box{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:16px;padding:20px;width:100%;max-width:360px;box-shadow:var(--shadow),var(--shadow-glow)}
-.modal-title{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.modal-h{font-weight:700;font-size:18px;color:var(--primary);letter-spacing:0.04em}
-.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.mstat{background:rgba(0,212,170,0.06);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
-.mstat-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:2px}
-.mstat-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary)}
-.mstat-val.gold{color:var(--accent2)}
-.form-lbl{font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:block}
-.name-input{width:100%;background:rgba(0,212,170,0.05);border:1px solid var(--border-bright);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;margin-bottom:12px}
-.name-input:focus{border-color:var(--primary)}
-.ptype-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.ptype-btn{flex:1;min-width:58px;padding:7px 4px;border-radius:8px;background:rgba(0,212,170,0.06);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.12s}
-.ptype-btn.active{background:rgba(0,212,170,0.18);border-color:var(--primary);color:var(--primary)}
-.modal-btns{display:flex;gap:8px}
-.btn-cancel{flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-dim);font-family:var(--font);font-weight:600;font-size:14px;cursor:pointer}
-.btn-save{flex:2;padding:10px;background:var(--primary);border:none;border-radius:10px;color:var(--bg-dark);font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;letter-spacing:0.04em}
-#hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,0.88);border:1px solid rgba(0,212,170,0.3);border-radius:10px;padding:10px 20px;color:rgba(232,244,240,0.7);font-family:var(--font);font-size:14px;pointer-events:none;z-index:900;white-space:nowrap}
-#zoom-btns{position:absolute;right:10px;bottom:90px;z-index:1000;display:flex;flex-direction:column;gap:4px}
-.zoom-btn{width:36px;height:36px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);line-height:1}
-.zoom-btn:hover{border-color:var(--border-bright)}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,212,170,0.3);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.tb2{width:46px;height:46px;border-radius:10px;background:var(--card);border:1px solid var(--b);color:var(--t);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:var(--sh);transition:all 0.15s;font-family:var(--f);font-size:18px}
+.tb2:disabled{opacity:0.3;cursor:not-allowed}
+.tb2:not(:disabled):hover{border-color:var(--bb);transform:scale(1.04)}
+.tb2 .tl{font-size:9px;letter-spacing:0.05em;opacity:0.65}
+.tb2.dn{color:var(--d)}.tb2.wn{color:var(--w)}.tb2.pr{color:var(--p)}.tb2.gd{color:var(--a2)}
+.tb2.ac{background:rgba(0,212,170,0.12);border-color:var(--p)}
+.ts{height:1px;background:rgba(0,212,170,0.12);margin:4px 0}
+#mp{position:absolute;bottom:80px;left:10px;z-index:1000;background:var(--card);border:1px solid var(--bb);border-radius:14px;padding:12px 16px;min-width:205px;box-shadow:var(--sh),var(--sg);display:none}
+.mph{display:flex;align-items:center;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--b);padding-bottom:8px}
+.mpt{font-weight:700;font-size:13px;color:var(--p);letter-spacing:0.07em;text-transform:uppercase}
+.mpb{margin-left:auto;background:var(--p);color:var(--bg);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--m)}
+.mt{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.ml{font-size:10px;font-family:var(--f);letter-spacing:0.08em;color:var(--td);font-weight:600;flex-shrink:0;text-transform:uppercase}
+.mv{font-family:var(--m);font-size:12px;font-weight:500;color:var(--t);text-align:right}
+.mv.big{font-size:15px;font-weight:700;color:var(--p)}
+.mv.sf{color:var(--a2);font-size:13px;font-weight:700}
+.msp{height:1px;background:var(--b);margin:4px 0 6px}
+#cd{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--card);border-top:1px solid var(--bb);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:45vh;display:none;flex-direction:column}
+#sd{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--card);border-top:1px solid rgba(255,215,0,0.3);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:60vh;display:none;flex-direction:column}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;flex-shrink:0;border-bottom:1px solid var(--b)}
+.dt{font-weight:700;font-size:14px;letter-spacing:0.06em;text-transform:uppercase}
+.dc{background:none;border:none;color:var(--td);cursor:pointer;font-size:22px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.db{overflow-y:auto;flex:1}
+.ch2{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:6px 16px;border-bottom:1px solid rgba(0,212,170,0.07);flex-shrink:0}
+.chh{font-size:10px;font-weight:700;color:var(--td);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--f)}
+.cr{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(0,212,170,0.04);cursor:pointer;transition:background 0.1s}
+.cr:hover{background:rgba(0,212,170,0.05)}
+.cr.sel{background:rgba(0,212,170,0.1)}
+.pb{width:22px;height:22px;border-radius:50%;background:var(--p);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--f);flex-shrink:0}
+.pb.sel{background:var(--a)}
+.cv{font-family:var(--m);font-size:12px;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.em{padding:24px 16px;color:var(--td);font-size:13px;text-align:center;line-height:1.6}
+.si2{padding:12px 16px;border-bottom:1px solid rgba(0,212,170,0.05)}
+.sn{font-weight:700;font-size:15px;color:var(--tb)}
+.sm{font-family:var(--m);font-size:10px;color:var(--td);margin-top:2px}
+.sa{font-family:var(--m);font-size:12px;color:var(--p);font-weight:600}
+.sf2{font-family:var(--m);font-size:11px;color:var(--a2)}
+.sbt{display:flex;gap:6px;margin-top:8px}
+.sb2{flex:1;padding:6px 0;border-radius:7px;font-family:var(--f);font-weight:600;font-size:12px;cursor:pointer;transition:all 0.12s}
+.sbl{background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.3);color:var(--p)}
+.sbe{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--a2)}
+.sbd{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--d)}
+#sm2{position:absolute;inset:0;z-index:2000;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;padding:16px}
+.mb{background:var(--card);border:1px solid var(--bb);border-radius:16px;padding:20px;width:100%;max-width:360px;box-shadow:var(--sh),var(--sg)}
+.mh{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.mhh{font-weight:700;font-size:18px;color:var(--p)}
+.mst{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.msc{background:rgba(0,212,170,0.06);border:1px solid var(--b);border-radius:10px;padding:8px 12px}
+.msl{font-family:var(--m);font-size:10px;color:var(--td);margin-bottom:2px}
+.msv{font-family:var(--m);font-size:13px;font-weight:700;color:var(--p)}
+.msv.go{color:var(--a2)}
+.fl{font-size:12px;font-weight:600;color:var(--td);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:block}
+.ni{width:100%;background:rgba(0,212,170,0.05);border:1px solid var(--bb);border-radius:10px;padding:10px 14px;color:var(--t);font-family:var(--f);font-size:15px;outline:none;margin-bottom:12px}
+.ni:focus{border-color:var(--p)}
+.pr2{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.pb3{flex:1;min-width:58px;padding:7px 4px;border-radius:8px;background:rgba(0,212,170,0.06);border:1px solid var(--b);color:var(--td);font-family:var(--f);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.12s}
+.pb3.ac{background:rgba(0,212,170,0.18);border-color:var(--p);color:var(--p)}
+.mbt{display:flex;gap:8px}
+.bcn{flex:1;padding:10px;background:transparent;border:1px solid var(--b);border-radius:10px;color:var(--td);font-family:var(--f);font-weight:600;font-size:14px;cursor:pointer}
+.bsv{flex:2;padding:10px;background:var(--p);border:none;border-radius:10px;color:var(--bg);font-family:var(--f);font-weight:700;font-size:14px;cursor:pointer}
+#hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,0.88);border:1px solid rgba(0,212,170,0.3);border-radius:10px;padding:10px 20px;color:rgba(232,244,240,0.7);font-family:var(--f);font-size:14px;pointer-events:none;z-index:900;white-space:nowrap}
+#zb{position:absolute;right:10px;bottom:90px;z-index:1000;display:flex;flex-direction:column;gap:4px}
+.zbt{width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--b);color:var(--t);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);line-height:1}
+.zbt:hover{border-color:var(--bb)}
+.sp{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,212,170,0.3);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 ::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+::-webkit-scrollbar-thumb{background:var(--bb);border-radius:2px}
 </style>
 </head>
 <body>
 <div id="map"></div>
 
 <div id="topbar">
-  <button class="icon-btn" id="menu-btn" title="Menu">
+  <button class="ib" id="menu-btn">
     <svg width="18" height="14" viewBox="0 0 18 14"><rect y="0" width="18" height="2" rx="1" fill="currentColor"/><rect y="6" width="18" height="2" rx="1" fill="currentColor"/><rect y="12" width="18" height="2" rx="1" fill="currentColor"/></svg>
   </button>
-  <div id="search-wrap">
-    <div id="search-box">
-      <span id="search-icon">🔍</span>
-      <input id="search-input" type="text" placeholder="Plot no, house, factory, land address..." autocomplete="off" />
-      <button id="search-clear" style="display:none">×</button>
+  <div id="sw">
+    <div id="sb">
+      <span id="si-icon">🔍</span>
+      <input id="si" type="text" placeholder="H.no 1772 Sector 4 Gurgaon..." autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button id="sc" style="display:none">×</button>
     </div>
-    <div id="search-results"></div>
+    <div id="sr"></div>
   </div>
-  <div id="layer-wrap">
-    <button class="icon-btn" id="layer-btn" title="Map type">🗺️</button>
-    <div id="layer-dropdown">
-      <div class="layer-item active" data-layer="street">🗺️ Street</div>
-      <div class="layer-item" data-layer="satellite">🛰️ Satellite</div>
-      <div class="layer-item" data-layer="hybrid">🌍 Hybrid</div>
+  <div id="lw">
+    <button class="ib" id="lb">🗺️</button>
+    <div id="ld">
+      <div class="li active" data-l="street">🗺️ Street</div>
+      <div class="li" data-l="satellite">🛰️ Satellite</div>
+      <div class="li" data-l="hybrid">🌍 Hybrid</div>
     </div>
   </div>
 </div>
 
 <div id="tools">
-  <button class="tool-btn warn" id="btn-undo" disabled><span>↩</span><span class="tlbl">UNDO</span></button>
-  <button class="tool-btn danger" id="btn-delete" disabled><span>🗑</span><span class="tlbl">DEL</span></button>
-  <button class="tool-btn danger" id="btn-clear" disabled><span>✕</span><span class="tlbl">CLEAR</span></button>
-  <div class="tool-sep"></div>
-  <button class="tool-btn primary" id="btn-save" disabled><span>💾</span><span class="tlbl">SAVE</span></button>
-  <button class="tool-btn" id="btn-coords"><span>📋</span><span class="tlbl">COORDS</span></button>
-  <button class="tool-btn gold" id="btn-saved"><span>📁</span><span class="tlbl">SAVED</span></button>
+  <button class="tb2 wn" id="bu" disabled><span>↩</span><span class="tl">UNDO</span></button>
+  <button class="tb2 dn" id="bd" disabled><span>🗑</span><span class="tl">DEL</span></button>
+  <button class="tb2 dn" id="bc" disabled><span>✕</span><span class="tl">CLEAR</span></button>
+  <div class="ts"></div>
+  <button class="tb2 pr" id="bsave" disabled><span>💾</span><span class="tl">SAVE</span></button>
+  <button class="tb2" id="bco"><span>📋</span><span class="tl">COORDS</span></button>
+  <button class="tb2 gd" id="bsd"><span>📁</span><span class="tl">SAVED</span></button>
 </div>
 
-<div id="zoom-btns">
-  <button class="zoom-btn" id="btn-zi">+</button>
-  <button class="zoom-btn" id="btn-zo">−</button>
+<div id="zb">
+  <button class="zbt" id="bzi">+</button>
+  <button class="zbt" id="bzo">−</button>
 </div>
 
-<div id="measure-panel">
-  <div class="mp-header">
-    <span style="color:var(--primary);font-size:14px">◈</span>
-    <span class="mp-title">Live Measurement</span>
-    <span class="mp-badge" id="mp-pts">0 pts</span>
-  </div>
-  <div class="metric"><span class="m-lbl">SQ. FEET</span><span class="m-val sqft" id="mp-sqft">—</span></div>
-  <div class="metric"><span class="m-lbl">AREA (m²)</span><span class="m-val big" id="mp-area">—</span></div>
-  <div class="metric"><span class="m-lbl">ACRES</span><span class="m-val" id="mp-acres">—</span></div>
-  <div class="metric"><span class="m-lbl">HECTARES</span><span class="m-val" id="mp-ha">—</span></div>
-  <div class="metric"><span class="m-lbl">GUNTA</span><span class="m-val" id="mp-gunta">—</span></div>
-  <div class="mp-sep"></div>
-  <div class="metric"><span class="m-lbl">PERIMETER</span><span class="m-val" id="mp-perim">—</span></div>
+<div id="mp">
+  <div class="mph"><span style="color:var(--p);font-size:14px">◈</span><span class="mpt">Live Measurement</span><span class="mpb" id="mp-pts">0 pts</span></div>
+  <div class="mt"><span class="ml">SQ. FEET</span><span class="mv sf" id="mp-sf">—</span></div>
+  <div class="mt"><span class="ml">AREA (m²)</span><span class="mv big" id="mp-a">—</span></div>
+  <div class="mt"><span class="ml">ACRES</span><span class="mv" id="mp-ac">—</span></div>
+  <div class="mt"><span class="ml">HECTARES</span><span class="mv" id="mp-ha">—</span></div>
+  <div class="mt"><span class="ml">GUNTA</span><span class="mv" id="mp-gu">—</span></div>
+  <div class="msp"></div>
+  <div class="mt"><span class="ml">PERIMETER</span><span class="mv" id="mp-pe">—</span></div>
 </div>
 
 <div id="hint">📍 Tap the map to add boundary points</div>
 
-<div id="coord-drawer">
-  <div class="drawer-header">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span>📍</span>
-      <span class="drawer-title" style="color:var(--primary)">Coordinates</span>
-      <span class="mp-badge" id="cd-count" style="background:rgba(0,212,170,0.15);color:var(--primary)">0</span>
-    </div>
-    <button class="drawer-close" id="close-coords">×</button>
+<div id="cd">
+  <div class="dh">
+    <div style="display:flex;align-items:center;gap:8px"><span>📍</span><span class="dt" style="color:var(--p)">Coordinates</span><span class="mpb" id="cd-n" style="background:rgba(0,212,170,0.15);color:var(--p)">0</span></div>
+    <button class="dc" id="cc">×</button>
   </div>
-  <div class="coord-head"><span class="ch">#</span><span class="ch">LATITUDE</span><span class="ch">LONGITUDE</span></div>
-  <div class="drawer-body" id="coord-list"></div>
+  <div class="ch2"><span class="chh">#</span><span class="chh">LATITUDE</span><span class="chh">LONGITUDE</span></div>
+  <div class="db" id="cl"></div>
 </div>
 
-<div id="saved-drawer">
-  <div class="drawer-header">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span>📁</span>
-      <span class="drawer-title" style="color:var(--accent2)">Saved Measurements</span>
-      <span id="saved-count" style="background:rgba(255,215,0,0.12);color:var(--accent2);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--mono)">0</span>
-    </div>
-    <button class="drawer-close" id="close-saved">×</button>
+<div id="sd">
+  <div class="dh">
+    <div style="display:flex;align-items:center;gap:8px"><span>📁</span><span class="dt" style="color:var(--a2)">Saved</span><span id="sd-n" style="background:rgba(255,215,0,0.12);color:var(--a2);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--m)">0</span></div>
+    <button class="dc" id="cs">×</button>
   </div>
-  <div class="drawer-body" id="saved-list"></div>
+  <div class="db" id="sl"></div>
 </div>
 
-<div id="save-modal">
-  <div class="modal-box">
-    <div class="modal-title"><span style="font-size:20px">💾</span><span class="modal-h">Save Measurement</span></div>
-    <div class="modal-stats">
-      <div class="mstat"><div class="mstat-lbl">AREA</div><div class="mstat-val" id="modal-area">—</div></div>
-      <div class="mstat"><div class="mstat-lbl">SQ. FEET</div><div class="mstat-val gold" id="modal-sqft">—</div></div>
-      <div class="mstat"><div class="mstat-lbl">ACRES</div><div class="mstat-val" id="modal-acres" style="color:var(--text)">—</div></div>
-      <div class="mstat"><div class="mstat-lbl">PERIMETER</div><div class="mstat-val" id="modal-perim" style="color:var(--text)">—</div></div>
+<div id="sm2">
+  <div class="mb">
+    <div class="mh"><span style="font-size:20px">💾</span><span class="mhh">Save Measurement</span></div>
+    <div class="mst">
+      <div class="msc"><div class="msl">AREA</div><div class="msv" id="mo-a">—</div></div>
+      <div class="msc"><div class="msl">SQ. FEET</div><div class="msv go" id="mo-sf">—</div></div>
+      <div class="msc"><div class="msl">ACRES</div><div class="msv" id="mo-ac" style="color:var(--t)">—</div></div>
+      <div class="msc"><div class="msl">PERIMETER</div><div class="msv" id="mo-pe" style="color:var(--t)">—</div></div>
     </div>
-    <label class="form-lbl">Property Name / Address</label>
-    <input class="name-input" id="mname-input" type="text" placeholder="e.g. Plot 47, Sector 9, Gurgaon" />
-    <label class="form-lbl">Property Type</label>
-    <div class="ptype-row" id="ptype-row">
-      <button class="ptype-btn active" data-type="Plot">🏗 Plot</button>
-      <button class="ptype-btn" data-type="House">🏠 House</button>
-      <button class="ptype-btn" data-type="Factory">🏭 Factory</button>
-      <button class="ptype-btn" data-type="Land">🌾 Land</button>
-      <button class="ptype-btn" data-type="Field">🌿 Field</button>
-      <button class="ptype-btn" data-type="Other">📌 Other</button>
+    <label class="fl">Property Name / Address</label>
+    <input class="ni" id="mn" type="text" placeholder="e.g. H.No 1772, Sector 4, Gurgaon"/>
+    <label class="fl">Property Type</label>
+    <div class="pr2">
+      <button class="pb3 ac" data-t="Plot">🏗 Plot</button>
+      <button class="pb3" data-t="House">🏠 House</button>
+      <button class="pb3" data-t="Factory">🏭 Factory</button>
+      <button class="pb3" data-t="Land">🌾 Land</button>
+      <button class="pb3" data-t="Field">🌿 Field</button>
+      <button class="pb3" data-t="Other">📌 Other</button>
     </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" id="cancel-save">Cancel</button>
-      <button class="btn-save" id="confirm-save">Save Measurement</button>
+    <div class="mbt">
+      <button class="bcn" id="cnc">Cancel</button>
+      <button class="bsv" id="csv">Save Measurement</button>
     </div>
   </div>
 </div>
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────
-const GKEY = 'AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY';
+const GK='AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY';
 
 // ── STATE ──────────────────────────────────────────────────
-let points=[],selectedId=null,currentLayer='street',coordOpen=false,savedOpen=false;
-let debounceTimer=null,selectedPtype='Plot',acSvc=null,acActive=false;
-let measurements=[];
-try{measurements=JSON.parse(localStorage.getItem('gps_lmp_v3')||'[]')}catch(e){}
-
-let map,baseTile,labelTile;
-const markers=new Map();
-let polygon=null,polyline=null;
-const distLabels=[],angleLabels=[];
+let pts=[],selId=null,layer='street',coOpen=false,svOpen=false,dt=null,pty='Plot';
+let gReady=false,gcSvc=null,autoSvc=null;
+let meas=[];try{meas=JSON.parse(localStorage.getItem('glmp4')||'[]')}catch(e){}
+let map,bTile,lTile;
+const mkMap=new Map();
+let poly=null,pline=null;
+const dls=[],als=[];
 
 // ── MAP ────────────────────────────────────────────────────
 function initMap(){
   map=L.map('map',{center:[28.4595,77.0266],zoom:15,zoomControl:false});
-  baseTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:21}).addTo(map);
-  map.on('click',e=>addPoint(e.latlng.lat,e.latlng.lng));
+  bTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:21}).addTo(map);
+  map.on('click',e=>addPt(e.latlng.lat,e.latlng.lng));
 }
-
-// ── LAYERS ─────────────────────────────────────────────────
-const TILES={
-  street:{url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',attr:'© OpenStreetMap'},
-  satellite:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',attr:'© Esri'},
-};
+const TL={street:{url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',attr:'© OSM'},satellite:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',attr:'© Esri'}};
 function setLayer(l){
-  currentLayer=l;
-  if(baseTile)map.removeLayer(baseTile);
-  if(labelTile){map.removeLayer(labelTile);labelTile=null;}
-  const c=TILES[l==='hybrid'?'satellite':l];
-  baseTile=L.tileLayer(c.url,{attribution:c.attr,maxZoom:21}).addTo(map);
-  if(l==='hybrid'){labelTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:21}).addTo(map);}
-  document.querySelectorAll('.layer-item').forEach(el=>el.classList.toggle('active',el.dataset.layer===l));
-  document.getElementById('layer-btn').textContent={street:'🗺️',satellite:'🛰️',hybrid:'🌍'}[l];
-  document.getElementById('layer-dropdown').style.display='none';
+  layer=l;if(bTile)map.removeLayer(bTile);if(lTile){map.removeLayer(lTile);lTile=null;}
+  const c=TL[l==='hybrid'?'satellite':l];
+  bTile=L.tileLayer(c.url,{attribution:c.attr,maxZoom:21}).addTo(map);
+  if(l==='hybrid'){lTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:21}).addTo(map);}
+  document.querySelectorAll('.li').forEach(e=>e.classList.toggle('active',e.dataset.l===l));
+  document.getElementById('lb').textContent={street:'🗺️',satellite:'🛰️',hybrid:'🌍'}[l];
+  document.getElementById('ld').style.display='none';
 }
-document.getElementById('layer-btn').addEventListener('click',e=>{e.stopPropagation();const d=document.getElementById('layer-dropdown');d.style.display=d.style.display==='block'?'none':'block';});
-document.querySelectorAll('.layer-item').forEach(el=>el.addEventListener('click',()=>setLayer(el.dataset.layer)));
-document.getElementById('btn-zi').addEventListener('click',()=>map.zoomIn());
-document.getElementById('btn-zo').addEventListener('click',()=>map.zoomOut());
+document.getElementById('lb').addEventListener('click',e=>{e.stopPropagation();const d=document.getElementById('ld');d.style.display=d.style.display==='block'?'none':'block';});
+document.querySelectorAll('.li').forEach(e=>e.addEventListener('click',()=>setLayer(e.dataset.l)));
+document.getElementById('bzi').addEventListener('click',()=>map.zoomIn());
+document.getElementById('bzo').addEventListener('click',()=>map.zoomOut());
 
-// ── GOOGLE PLACES AUTOCOMPLETE SEARCH ─────────────────────
-const searchInput=document.getElementById('search-input');
-const searchResults=document.getElementById('search-results');
-const searchClear=document.getElementById('search-clear');
-const searchIcon=document.getElementById('search-icon');
-
-// Load Google Maps JS API (Places library)
-function loadGoogleAPI(){
-  return new Promise((resolve)=>{
-    if(window.google&&window.google.maps){resolve();return;}
-    window.__gmCB=resolve;
+// ── GOOGLE API LOADER ──────────────────────────────────────
+function loadGoogle(){
+  return new Promise(res=>{
+    if(window.google&&window.google.maps){res();return;}
+    window.__gmcb=()=>{res();};
     const s=document.createElement('script');
-    s.src=`https://maps.googleapis.com/maps/api/js?key=${GKEY}&libraries=places&callback=__gmCB`;
-    s.async=true;s.defer=true;
-    document.head.appendChild(s);
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${GK}&libraries=places&callback=__gmcb&loading=async`;
+    s.async=true;s.defer=true;document.head.appendChild(s);
   });
 }
+loadGoogle().then(()=>{
+  gReady=true;
+  try{
+    autoSvc=new google.maps.places.AutocompleteService();
+    gcSvc=new google.maps.Geocoder();
+  }catch(e){console.warn('Google Places init:',e);}
+}).catch(e=>console.warn('Google load failed:',e));
 
-async function initPlaces(){
-  await loadGoogleAPI();
-  // Create a hidden div for Places service
-  const dummy=document.createElement('div');
-  document.body.appendChild(dummy);
-  acSvc=new google.maps.places.AutocompleteService();
-  acActive=true;
-}
-initPlaces().catch(e=>console.warn('Google Places init failed:',e));
+// ── SMART SEARCH ENGINE ────────────────────────────────────
+const inp=document.getElementById('si');
+const res=document.getElementById('sr');
+const clr=document.getElementById('sc');
+const ico=document.getElementById('si-icon');
 
-searchInput.addEventListener('input',()=>{
-  const q=searchInput.value.trim();
-  searchClear.style.display=q?'block':'none';
-  if(debounceTimer)clearTimeout(debounceTimer);
-  if(!q){searchResults.style.display='none';return;}
-  debounceTimer=setTimeout(()=>doSearch(q),300);
+inp.addEventListener('input',()=>{
+  const q=inp.value.trim();
+  clr.style.display=q?'block':'none';
+  if(dt)clearTimeout(dt);
+  if(!q){res.style.display='none';return;}
+  // Faster response - 250ms debounce
+  dt=setTimeout(()=>search(q),250);
 });
-searchInput.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&searchInput.value.trim())doSearch(searchInput.value.trim());
-  if(e.key==='Escape'){searchResults.style.display='none';}
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&inp.value.trim())search(inp.value.trim());
+  if(e.key==='Escape')res.style.display='none';
 });
-searchClear.addEventListener('click',()=>{searchInput.value='';searchResults.style.display='none';searchClear.style.display='none';});
+clr.addEventListener('click',()=>{inp.value='';res.style.display='none';clr.style.display='none';});
 
-async function doSearch(q){
-  // Check if it's coordinates: "28.4523, 77.0312" or "28.4523,77.0312"
-  const coordMatch=q.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
-  if(coordMatch){
-    const lat=parseFloat(coordMatch[1]),lng=parseFloat(coordMatch[2]);
-    if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180){
-      showResults([{lat,lng,main:'📍 Go to Coordinates',secondary:`${lat.toFixed(6)}, ${lng.toFixed(6)}`,type:'coords'}]);
+async function search(q){
+  // 1. Check for coordinate input: "28.45, 77.03"
+  const cm=q.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if(cm){
+    const la=parseFloat(cm[1]),ln=parseFloat(cm[2]);
+    if(la>=-90&&la<=90&&ln>=-180&&ln<=180){
+      renderRes([{la,ln,main:`📍 ${la.toFixed(6)}, ${ln.toFixed(6)}`,sec:'Go to coordinates',src:'c'}]);
       return;
     }
   }
 
-  searchIcon.innerHTML='<span class="spinner"></span>';
+  ico.innerHTML='<span class="sp"></span>';
+  res.innerHTML='<div class="r-hdr">Searching...</div>';
+  res.style.display='block';
 
-  if(acActive&&acSvc){
-    // Use Google Places Autocomplete — finds plots, houses, factories by exact address
-    acSvc.getPlacePredictions({
-      input:q,
-      componentRestrictions:{country:'in'},
-      types:[] // all types — residential, industrial, commercial, etc.
-    },(predictions,status)=>{
-      searchIcon.textContent='🔍';
-      if(status===google.maps.places.PlacesServiceStatus.OK&&predictions&&predictions.length){
-        const results=predictions.map(p=>({
-          placeId:p.place_id,
-          main:p.structured_formatting.main_text,
-          secondary:p.structured_formatting.secondary_text||'',
-          type:'google'
-        }));
-        showResults(results);
-      } else {
-        showNoResults(q);
-      }
+  const results=[];
+  const seen=new Set();
+
+  // Strategy: run Google + OSM in parallel
+  const [gRes,oRes]=await Promise.allSettled([
+    googleSearch(q),
+    osmSearch(q)
+  ]);
+
+  // Merge — Google first (more accurate for Indian addresses)
+  if(gRes.status==='fulfilled'&&gRes.value){
+    gRes.value.forEach(r=>{
+      const k=`${r.la?.toFixed(3)},${r.ln?.toFixed(3)}`;
+      if(r.placeId||!seen.has(k)){seen.add(k);results.push(r);}
+    });
+  }
+  if(oRes.status==='fulfilled'&&oRes.value){
+    oRes.value.forEach(r=>{
+      const k=`${r.la?.toFixed(3)},${r.ln?.toFixed(3)}`;
+      if(!seen.has(k)){seen.add(k);results.push(r);}
+    });
+  }
+
+  ico.textContent='🔍';
+  renderRes(results,q);
+}
+
+async function googleSearch(q){
+  // Try Places Autocomplete first (best for typing partial addresses)
+  if(gReady&&autoSvc){
+    return new Promise(res2=>{
+      autoSvc.getPlacePredictions({
+        input:q,
+        componentRestrictions:{country:'in'},
+        types:[]
+      },(preds,status)=>{
+        if(status===google.maps.places.PlacesServiceStatus.OK&&preds&&preds.length){
+          res2(preds.map(p=>({
+            placeId:p.place_id,
+            main:p.structured_formatting.main_text,
+            sec:p.structured_formatting.secondary_text||'',
+            src:'g'
+          })));
+        } else {
+          // Fallback to Geocoding API
+          googleGeocode(q).then(res2).catch(()=>res2([]));
+        }
+      });
     });
   } else {
-    // Fallback to Geocoding API
-    try{
-      const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q+', India')}&key=${GKEY}`);
-      const d=await r.json();
-      searchIcon.textContent='🔍';
-      if(d.results&&d.results.length){
-        const results=d.results.map(r=>({
-          lat:r.geometry.location.lat,
-          lng:r.geometry.location.lng,
-          main:r.formatted_address.split(',')[0],
-          secondary:r.formatted_address.split(',').slice(1).join(',').trim(),
-          type:'google'
-        }));
-        showResults(results);
-      } else showNoResults(q);
-    }catch(e){searchIcon.textContent='🔍';showNoResults(q);}
+    return googleGeocode(q);
   }
 }
 
-function showResults(results){
-  searchResults.innerHTML=results.map((r,i)=>`
-    <div class="sr-item" data-idx="${i}">
-      <div class="sr-main">${escH(r.main)}</div>
-      <div class="sr-sec">${escH(r.secondary||'')}</div>
-      <span class="sr-badge ${r.type==='coords'?'badge-coords':'badge-g'}">${r.type==='coords'?'COORDS':'GOOGLE'}</span>
-    </div>`).join('');
-  searchResults.style.display='block';
-
-  searchResults.querySelectorAll('.sr-item').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const r=results[parseInt(el.dataset.idx)];
-      if(r.type==='coords'){
-        map.flyTo([r.lat,r.lng],18,{duration:1.0});
-        searchInput.value=`${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
-        searchResults.style.display='none';
-        return;
+async function googleGeocode(q){
+  // Try multiple query variants for better Indian address matching
+  const queries=[
+    q+', India',
+    q.replace(/\bs\.?no\.?\s*/i,'Survey No ').replace(/\bkh\.?\s*/i,'Khasra '),
+    q
+  ];
+  for(const qq of queries){
+    try{
+      const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(qq)}&region=in&key=${GK}`);
+      const d=await r.json();
+      if(d.status==='REQUEST_DENIED')return [];
+      if(d.results&&d.results.length){
+        return d.results.slice(0,4).map(r=>({
+          la:r.geometry.location.lat,
+          ln:r.geometry.location.lng,
+          main:r.formatted_address.split(',')[0],
+          sec:r.formatted_address.split(',').slice(1,4).join(',').trim(),
+          src:'g'
+        }));
       }
-      if(r.placeId){
-        // Resolve place_id to coordinates via Geocoding API
-        searchIcon.innerHTML='<span class="spinner"></span>';
-        fetch(`https://maps.googleapis.com/maps/api/geocode/json?place_id=${r.placeId}&key=${GKEY}`)
-          .then(res=>res.json())
-          .then(d=>{
-            searchIcon.textContent='🔍';
+    }catch(e){}
+  }
+  return [];
+}
+
+async function osmSearch(q){
+  // Photon geocoder — good India coverage
+  try{
+    const url=`https://photon.komoot.io/api/?q=${encodeURIComponent(q+' India')}&limit=4&lang=en`;
+    const r=await fetch(url);const d=await r.json();
+    return (d.features||[]).map(f=>{
+      const p=f.properties;
+      const main=[p.housenumber,p.name,p.street].filter(Boolean).join(' ')||p.city||'Unknown';
+      const sec=[p.district,p.city,p.state,p.country].filter(Boolean).join(', ');
+      return{la:f.geometry.coordinates[1],ln:f.geometry.coordinates[0],main,sec,src:'o'};
+    });
+  }catch(e){return [];}
+}
+
+function renderRes(results,q){
+  if(!results||!results.length){
+    res.innerHTML=`
+      <div class="r-none">No results for "<b>${escH(q||'')}</b>"</div>
+      <div class="r-tip">
+        💡 <b>For better results, try:</b><br>
+        • Full address: "H.No 1772, Sector 4, Gurgaon, Haryana"<br>
+        • Plot format: "Plot No 47, Sector 9, Gurugram"<br>
+        • Factory: "Unit 12, Industrial Area Phase 2, Ludhiana"<br>
+        • Farm/Land: "Khasra 456, Village Bajghera, Gurugram"<br>
+        • Coordinates: "28.4595, 77.0266"<br>
+        • Or switch to <b>🛰 Satellite</b> and tap corners manually
+      </div>`;
+    res.style.display='block';
+    return;
+  }
+  res.innerHTML=results.map((r,i)=>`
+    <div class="ri" data-i="${i}">
+      <div class="r-main">${escH(r.main)}</div>
+      ${r.sec?`<div class="r-sec">${escH(r.sec)}</div>`:''}
+      <span class="r-src ${r.src==='c'?'src-c':r.src==='g'?'src-g':'src-o'}">${r.src==='c'?'COORDS':r.src==='g'?'GOOGLE':'OSM'}</span>
+    </div>`).join('');
+  res.style.display='block';
+
+  res.querySelectorAll('.ri').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const r=results[parseInt(el.dataset.i)];
+      if(r.src==='c'||typeof r.la==='number'){
+        // Direct coordinates available
+        map.flyTo([r.la,r.ln],19,{duration:1.0});
+        inp.value=r.main.replace('📍 ','');
+        res.style.display='none';
+      } else if(r.placeId){
+        // Need to resolve place_id via Geocoding
+        ico.innerHTML='<span class="sp"></span>';
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?place_id=${r.placeId}&key=${GK}`)
+          .then(x=>x.json()).then(d=>{
+            ico.textContent='🔍';
             if(d.results&&d.results[0]){
               const loc=d.results[0].geometry.location;
               map.flyTo([loc.lat,loc.lng],19,{duration:1.0});
-              searchInput.value=r.main;
-              searchResults.style.display='none';
+              inp.value=r.main;
+              res.style.display='none';
             }
-          }).catch(()=>{searchIcon.textContent='🔍';});
-      } else {
-        map.flyTo([r.lat,r.lng],19,{duration:1.0});
-        searchInput.value=r.main;
-        searchResults.style.display='none';
+          }).catch(()=>{ico.textContent='🔍';});
       }
     });
   });
 }
 
-function showNoResults(q){
-  searchResults.innerHTML=`
-    <div class="sr-noresult">No results for "<b>${escH(q)}</b>"</div>
-    <div class="sr-tip">
-      💡 Try adding more detail:<br>
-      • "Plot 47, Sector 9, Gurgaon, Haryana"<br>
-      • "H.No 1772, Sector 4, Gurgaon"<br>
-      • "DLF Factory, Phase 2, Faridabad"<br>
-      • Paste coordinates: "28.4523, 77.0312"
-    </div>`;
-  searchResults.style.display='block';
-}
-
-// ── POINTS ─────────────────────────────────────────────────
+// ── POINTS & DRAWING ───────────────────────────────────────
 function uid(){return Math.random().toString(36).slice(2,10);}
-function addPoint(lat,lng){points.push({id:uid(),lat,lng,label:points.length+1});selectedId=null;renderAll();}
+function addPt(la,ln){pts.push({id:uid(),lat:la,lng:ln,label:pts.length+1});selId=null;renderAll();}
 
-document.getElementById('btn-undo').addEventListener('click',()=>{
-  if(!points.length)return;
-  const r=points.pop();const m=markers.get(r.id);
-  if(m){map.removeLayer(m);markers.delete(r.id);}
-  selectedId=null;renderAll();
+document.getElementById('bu').addEventListener('click',()=>{
+  if(!pts.length)return;const r=pts.pop();const m=mkMap.get(r.id);if(m){map.removeLayer(m);mkMap.delete(r.id);}selId=null;renderAll();
 });
-document.getElementById('btn-delete').addEventListener('click',()=>{
-  if(!selectedId)return;
-  const m=markers.get(selectedId);if(m){map.removeLayer(m);markers.delete(selectedId);}
-  points=points.filter(p=>p.id!==selectedId).map((p,i)=>({...p,label:i+1}));
-  selectedId=null;renderAll();
+document.getElementById('bd').addEventListener('click',()=>{
+  if(!selId)return;const m=mkMap.get(selId);if(m){map.removeLayer(m);mkMap.delete(selId);}
+  pts=pts.filter(p=>p.id!==selId).map((p,i)=>({...p,label:i+1}));selId=null;renderAll();
 });
-document.getElementById('btn-clear').addEventListener('click',()=>{
-  points=[];selectedId=null;markers.forEach(m=>map.removeLayer(m));markers.clear();renderAll();
+document.getElementById('bc').addEventListener('click',()=>{
+  pts=[];selId=null;mkMap.forEach(m=>map.removeLayer(m));mkMap.clear();renderAll();
 });
-function selectPoint(id){selectedId=selectedId===id?null:id;renderAll();}
-function renderAll(){renderMarkers();renderPolygon();renderDistLabels();renderAngleLabels();updateUI();}
+function selPt(id){selId=selId===id?null:id;renderAll();}
+function renderAll(){rMk();rPoly();rDist();rAng();updUI();}
 
-function renderMarkers(){
-  const cur=new Set(points.map(p=>p.id));
-  [...markers.keys()].forEach(id=>{if(!cur.has(id)){map.removeLayer(markers.get(id));markers.delete(id);}});
-  points.forEach(p=>{
-    const isSel=p.id===selectedId;
-    const icon=L.divIcon({className:'',html:`<div class="mm${isSel?' sel':''}">${p.label}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
-    if(markers.has(p.id)){markers.get(p.id).setLatLng([p.lat,p.lng]).setIcon(icon);}
-    else{const mk=L.marker([p.lat,p.lng],{icon,zIndexOffset:1000}).addTo(map);mk.on('click',e=>{L.DomEvent.stopPropagation(e);selectPoint(p.id);});markers.set(p.id,mk);}
+function rMk(){
+  const cur=new Set(pts.map(p=>p.id));
+  [...mkMap.keys()].forEach(id=>{if(!cur.has(id)){map.removeLayer(mkMap.get(id));mkMap.delete(id);}});
+  pts.forEach(p=>{
+    const s=p.id===selId;
+    const ic=L.divIcon({className:'',html:`<div class="mm${s?' sel':''}">${p.label}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
+    if(mkMap.has(p.id)){mkMap.get(p.id).setLatLng([p.lat,p.lng]).setIcon(ic);}
+    else{const mk=L.marker([p.lat,p.lng],{icon:ic,zIndexOffset:1000}).addTo(map);mk.on('click',e=>{L.DomEvent.stopPropagation(e);selPt(p.id);});mkMap.set(p.id,mk);}
   });
 }
-function renderPolygon(){
-  if(polygon){map.removeLayer(polygon);polygon=null;}
-  if(polyline){map.removeLayer(polyline);polyline=null;}
-  if(points.length>=3){polygon=L.polygon(points.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,opacity:0.9,fillColor:'#00d4aa',fillOpacity:0.1}).addTo(map);}
-  else if(points.length===2){polyline=L.polyline(points.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,dashArray:'6 4'}).addTo(map);}
+function rPoly(){
+  if(poly){map.removeLayer(poly);poly=null;}if(pline){map.removeLayer(pline);pline=null;}
+  if(pts.length>=3){poly=L.polygon(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,opacity:.9,fillColor:'#00d4aa',fillOpacity:.1}).addTo(map);}
+  else if(pts.length===2){pline=L.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,dashArray:'6 4'}).addTo(map);}
 }
 
 // ── GEOMETRY ───────────────────────────────────────────────
-function haversine(a,b,c,d){const R=6371000,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-function renderDistLabels(){
-  distLabels.forEach(l=>map.removeLayer(l));distLabels.length=0;
-  if(points.length<2)return;
-  const n=points.length,c=n>=3?n:n-1;
+function hav(a,b,c,d){const R=6371000,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function rDist(){
+  dls.forEach(l=>map.removeLayer(l));dls.length=0;
+  if(pts.length<2)return;const n=pts.length,c=n>=3?n:n-1;
   for(let i=0;i<c;i++){
-    const a=points[i],b=points[(i+1)%n];if(i===n-1&&n<3)break;
-    distLabels.push(L.marker([(a.lat+b.lat)/2,(a.lng+b.lng)/2],{icon:L.divIcon({className:'dist-lbl',html:fmtD(haversine(a.lat,a.lng,b.lat,b.lng)),iconAnchor:[20,10]}),interactive:false,zIndexOffset:500}).addTo(map));
+    const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;
+    dls.push(L.marker([(a.lat+b.lat)/2,(a.lng+b.lng)/2],{icon:L.divIcon({className:'dist-lbl',html:fD(hav(a.lat,a.lng,b.lat,b.lng)),iconAnchor:[20,10]}),interactive:false,zIndexOffset:500}).addTo(map));
   }
 }
-function renderAngleLabels(){
-  angleLabels.forEach(l=>map.removeLayer(l));angleLabels.length=0;
-  if(points.length<3)return;
-  const n=points.length;
+function rAng(){
+  als.forEach(l=>map.removeLayer(l));als.length=0;
+  if(pts.length<3)return;const n=pts.length;
   for(let i=0;i<n;i++){
-    const pv=points[(i-1+n)%n],cu=points[i],nx=points[(i+1)%n];
+    const pv=pts[(i-1+n)%n],cu=pts[i],nx=pts[(i+1)%n];
     const v1={x:pv.lng-cu.lng,y:pv.lat-cu.lat},v2={x:nx.lng-cu.lng,y:nx.lat-cu.lat};
-    const dot=v1.x*v2.x+v1.y*v2.y,mag=Math.sqrt((v1.x**2+v1.y**2)*(v2.x**2+v2.y**2));
-    if(!mag)continue;
-    const ang=Math.round(Math.acos(Math.max(-1,Math.min(1,dot/mag)))*1800)/10;
-    angleLabels.push(L.marker([cu.lat,cu.lng],{icon:L.divIcon({className:'ang-lbl',html:`${ang}°`,iconAnchor:[-6,22]}),interactive:false,zIndexOffset:400}).addTo(map));
+    const dot=v1.x*v2.x+v1.y*v2.y,mg=Math.sqrt((v1.x**2+v1.y**2)*(v2.x**2+v2.y**2));
+    if(!mg)continue;
+    const ag=Math.round(Math.acos(Math.max(-1,Math.min(1,dot/mg)))*1800)/10;
+    als.push(L.marker([cu.lat,cu.lng],{icon:L.divIcon({className:'ang-lbl',html:`${ag}°`,iconAnchor:[-6,22]}),interactive:false,zIndexOffset:400}).addTo(map));
   }
 }
-function calcArea(){
-  if(points.length<3)return{area:0,acres:0,ha:0,sqft:0,gunta:0};
-  try{const c=[...points.map(p=>[p.lng,p.lat]),[points[0].lng,points[0].lat]];const a=turf.area(turf.polygon([c]));return{area:a,acres:a/4046.856,ha:a/10000,sqft:a*10.7639,gunta:a/101.17};}
-  catch(e){return{area:0,acres:0,ha:0,sqft:0,gunta:0};}
+function cArea(){
+  if(pts.length<3)return{a:0,ac:0,ha:0,sf:0,gu:0};
+  try{const c=[...pts.map(p=>[p.lng,p.lat]),[pts[0].lng,pts[0].lat]];const a=turf.area(turf.polygon([c]));return{a,ac:a/4046.856,ha:a/10000,sf:a*10.7639,gu:a/101.17};}
+  catch(e){return{a:0,ac:0,ha:0,sf:0,gu:0};}
 }
-function calcPerim(){
-  if(points.length<2)return 0;let t=0;const n=points.length;
-  for(let i=0;i<n;i++){const a=points[i],b=points[(i+1)%n];if(i===n-1&&n<3)break;t+=haversine(a.lat,a.lng,b.lat,b.lng);}return t;
+function cPerim(){
+  if(pts.length<2)return 0;let t=0;const n=pts.length;
+  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;t+=hav(a.lat,a.lng,b.lat,b.lng);}return t;
 }
-function fmtD(m){return m>=1000?`${(m/1000).toFixed(2)}km`:m>=1?`${m.toFixed(1)}m`:`${(m*100).toFixed(0)}cm`;}
-function fmtA(s){return s>=1e6?`${(s/1e6).toFixed(4)}km²`:s>=1e4?`${(s/1e4).toFixed(4)}ha`:`${s.toFixed(2)}m²`;}
-function fmtSF(f){return f>0?`${Math.round(f).toLocaleString()} sq ft`:'—';}
+function fD(m){return m>=1000?`${(m/1e3).toFixed(2)}km`:m>=1?`${m.toFixed(1)}m`:`${(m*100).toFixed(0)}cm`;}
+function fA(s){return s>=1e6?`${(s/1e6).toFixed(4)}km²`:s>=1e4?`${(s/1e4).toFixed(4)}ha`:`${s.toFixed(2)}m²`;}
+function fSF(f){return f>0?`${Math.round(f).toLocaleString()} sq ft`:'—';}
 
-// ── UI ─────────────────────────────────────────────────────
-function updateUI(){
-  const n=points.length,hp=n>0,hs=!!selectedId;
-  document.getElementById('btn-undo').disabled=!hp;
-  document.getElementById('btn-delete').disabled=!hs;
-  document.getElementById('btn-clear').disabled=!hp;
-  document.getElementById('btn-save').disabled=!hp;
+// ── UI UPDATE ──────────────────────────────────────────────
+function updUI(){
+  const n=pts.length,hp=n>0,hs=!!selId;
+  document.getElementById('bu').disabled=!hp;
+  document.getElementById('bd').disabled=!hs;
+  document.getElementById('bc').disabled=!hp;
+  document.getElementById('bsave').disabled=!hp;
   document.getElementById('hint').style.display=hp?'none':'block';
-  const panel=document.getElementById('measure-panel');
+  const panel=document.getElementById('mp');
   if(n>=2){
     panel.style.display='block';
-    const{area,acres,ha,sqft,gunta}=calcArea();const perim=calcPerim();
+    const{a,ac,ha,sf,gu}=cArea();const pe=cPerim();
     document.getElementById('mp-pts').textContent=`${n} pts`;
-    document.getElementById('mp-sqft').textContent=fmtSF(sqft);
-    document.getElementById('mp-area').textContent=fmtA(area);
-    document.getElementById('mp-acres').textContent=`${acres.toFixed(4)} ac`;
+    document.getElementById('mp-sf').textContent=fSF(sf);
+    document.getElementById('mp-a').textContent=fA(a);
+    document.getElementById('mp-ac').textContent=`${ac.toFixed(4)} ac`;
     document.getElementById('mp-ha').textContent=`${ha.toFixed(4)} ha`;
-    document.getElementById('mp-gunta').textContent=`${gunta.toFixed(3)} Gunta`;
-    document.getElementById('mp-perim').textContent=fmtD(perim);
+    document.getElementById('mp-gu').textContent=`${gu.toFixed(3)} Gunta`;
+    document.getElementById('mp-pe').textContent=fD(pe);
   }else panel.style.display='none';
-  if(coordOpen)renderCoordList();
-  if(!hp&&coordOpen)closeCoords();
+  if(coOpen)rCL();
+  if(!hp&&coOpen)closeCO();
 }
-function renderCoordList(){
-  document.getElementById('cd-count').textContent=points.length;
-  const list=document.getElementById('coord-list');
-  if(!points.length){list.innerHTML='<div class="empty-msg">No points yet</div>';return;}
-  list.innerHTML=points.map(p=>`<div class="coord-row${p.id===selectedId?' sel':''}" data-id="${p.id}"><div class="pt-badge${p.id===selectedId?' sel':''}">${p.label}</div><span class="coord-val">${p.lat.toFixed(7)}</span><span class="coord-val">${p.lng.toFixed(7)}</span></div>`).join('');
-  list.querySelectorAll('.coord-row').forEach(el=>el.addEventListener('click',()=>selectPoint(el.dataset.id)));
+function rCL(){
+  document.getElementById('cd-n').textContent=pts.length;
+  const l=document.getElementById('cl');
+  if(!pts.length){l.innerHTML='<div class="em">No points yet</div>';return;}
+  l.innerHTML=pts.map(p=>`<div class="cr${p.id===selId?' sel':''}" data-id="${p.id}"><div class="pb${p.id===selId?' sel':''}">${p.label}</div><span class="cv">${p.lat.toFixed(7)}</span><span class="cv">${p.lng.toFixed(7)}</span></div>`).join('');
+  l.querySelectorAll('.cr').forEach(el=>el.addEventListener('click',()=>selPt(el.dataset.id)));
 }
 
 // ── DRAWERS ────────────────────────────────────────────────
-function toggleCoords(){coordOpen=!coordOpen;if(savedOpen)closeSaved();document.getElementById('coord-drawer').style.display=coordOpen?'flex':'none';document.getElementById('btn-coords').classList.toggle('active',coordOpen);if(coordOpen)renderCoordList();}
-function closeCoords(){coordOpen=false;document.getElementById('coord-drawer').style.display='none';document.getElementById('btn-coords').classList.remove('active');}
-function toggleSaved(){savedOpen=!savedOpen;if(coordOpen)closeCoords();document.getElementById('saved-drawer').style.display=savedOpen?'flex':'none';document.getElementById('btn-saved').classList.toggle('active',savedOpen);if(savedOpen)renderSavedList();}
-function closeSaved(){savedOpen=false;document.getElementById('saved-drawer').style.display='none';document.getElementById('btn-saved').classList.remove('active');}
-document.getElementById('btn-coords').addEventListener('click',toggleCoords);
-document.getElementById('btn-saved').addEventListener('click',toggleSaved);
-document.getElementById('close-coords').addEventListener('click',closeCoords);
-document.getElementById('close-saved').addEventListener('click',closeSaved);
+function togCO(){coOpen=!coOpen;if(svOpen)closeSV();document.getElementById('cd').style.display=coOpen?'flex':'none';document.getElementById('bco').classList.toggle('ac',coOpen);if(coOpen)rCL();}
+function closeCO(){coOpen=false;document.getElementById('cd').style.display='none';document.getElementById('bco').classList.remove('ac');}
+function togSV(){svOpen=!svOpen;if(coOpen)closeCO();document.getElementById('sd').style.display=svOpen?'flex':'none';document.getElementById('bsd').classList.toggle('ac',svOpen);if(svOpen)rSL();}
+function closeSV(){svOpen=false;document.getElementById('sd').style.display='none';document.getElementById('bsd').classList.remove('ac');}
+document.getElementById('bco').addEventListener('click',togCO);
+document.getElementById('bsd').addEventListener('click',togSV);
+document.getElementById('cc').addEventListener('click',closeCO);
+document.getElementById('cs').addEventListener('click',closeSV);
 
-function renderSavedList(){
-  const list=document.getElementById('saved-list');
-  document.getElementById('saved-count').textContent=measurements.length;
-  if(!measurements.length){list.innerHTML='<div class="empty-msg">No saved measurements yet.<br><span style="font-size:11px;opacity:0.6">Mark a boundary and tap 💾 Save.</span></div>';return;}
-  const ti=(t)=>({Plot:'🏗',House:'🏠',Factory:'🏭',Land:'🌾',Field:'🌿'}[t]||'📌');
-  list.innerHTML=[...measurements].reverse().map(m=>`<div class="saved-item"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="si-name">${ti(m.ptype)} ${escH(m.name)}</div><div class="si-meta">${new Date(m.timestamp).toLocaleDateString('en-IN')} · ${m.points.length} pts · ${m.ptype||'Plot'}</div></div><div style="text-align:right"><div class="si-area">${fmtA(m.area)}</div><div class="si-sqft">${fmtSF(m.sqft||m.area*10.7639)}</div></div></div><div class="si-btns"><button class="si-btn si-btn-load" data-id="${m.id}">Load</button><button class="si-btn si-btn-exp" data-id="${m.id}">Export</button><button class="si-btn si-btn-del" data-id="${m.id}">Delete</button></div></div>`).join('');
-  list.querySelectorAll('.si-btn-load').forEach(b=>b.addEventListener('click',()=>loadM(b.dataset.id)));
-  list.querySelectorAll('.si-btn-exp').forEach(b=>b.addEventListener('click',()=>exportM(b.dataset.id)));
-  list.querySelectorAll('.si-btn-del').forEach(b=>b.addEventListener('click',()=>{measurements=measurements.filter(m=>m.id!==b.dataset.id);try{localStorage.setItem('gps_lmp_v3',JSON.stringify(measurements));}catch(e){}renderSavedList();}));
+const TI=t=>({Plot:'🏗',House:'🏠',Factory:'🏭',Land:'🌾',Field:'🌿'}[t]||'📌');
+function rSL(){
+  const l=document.getElementById('sl');
+  document.getElementById('sd-n').textContent=meas.length;
+  if(!meas.length){l.innerHTML='<div class="em">No saved measurements yet.<br><span style="opacity:0.6;font-size:11px">Mark a boundary and tap 💾</span></div>';return;}
+  l.innerHTML=[...meas].reverse().map(m=>`<div class="si2"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="sn">${TI(m.pt)} ${escH(m.name)}</div><div class="sm">${new Date(m.ts).toLocaleDateString('en-IN')} · ${m.pts.length} pts · ${m.pt||'Plot'}</div></div><div style="text-align:right"><div class="sa">${fA(m.a)}</div><div class="sf2">${fSF(m.sf||m.a*10.7639)}</div></div></div><div class="sbt"><button class="sb2 sbl" data-id="${m.id}">Load</button><button class="sb2 sbe" data-id="${m.id}">Export</button><button class="sb2 sbd" data-id="${m.id}">Delete</button></div></div>`).join('');
+  l.querySelectorAll('.sbl').forEach(b=>b.addEventListener('click',()=>loadM(b.dataset.id)));
+  l.querySelectorAll('.sbe').forEach(b=>b.addEventListener('click',()=>expM(b.dataset.id)));
+  l.querySelectorAll('.sbd').forEach(b=>b.addEventListener('click',()=>{meas=meas.filter(m=>m.id!==b.dataset.id);try{localStorage.setItem('glmp4',JSON.stringify(meas));}catch(e){}rSL();}));
 }
 
 // ── SAVE ───────────────────────────────────────────────────
-document.getElementById('btn-save').addEventListener('click',()=>{
-  if(!points.length)return;
-  const{area,sqft,acres}=calcArea();const perim=calcPerim();
-  document.getElementById('modal-area').textContent=fmtA(area);
-  document.getElementById('modal-sqft').textContent=fmtSF(sqft);
-  document.getElementById('modal-acres').textContent=`${acres.toFixed(4)} ac`;
-  document.getElementById('modal-perim').textContent=fmtD(perim);
-  document.getElementById('mname-input').value='';
-  document.getElementById('save-modal').style.display='flex';
-  setTimeout(()=>document.getElementById('mname-input').focus(),100);
+document.getElementById('bsave').addEventListener('click',()=>{
+  if(!pts.length)return;
+  const{a,sf,ac}=cArea();const pe=cPerim();
+  document.getElementById('mo-a').textContent=fA(a);
+  document.getElementById('mo-sf').textContent=fSF(sf);
+  document.getElementById('mo-ac').textContent=`${ac.toFixed(4)} ac`;
+  document.getElementById('mo-pe').textContent=fD(pe);
+  document.getElementById('mn').value='';
+  document.getElementById('sm2').style.display='flex';
+  setTimeout(()=>document.getElementById('mn').focus(),100);
 });
-document.getElementById('cancel-save').addEventListener('click',()=>document.getElementById('save-modal').style.display='none');
-document.getElementById('save-modal').addEventListener('click',e=>{if(e.target===document.getElementById('save-modal'))document.getElementById('save-modal').style.display='none';});
-document.getElementById('mname-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSave();});
-document.getElementById('confirm-save').addEventListener('click',doSave);
-document.querySelectorAll('.ptype-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.ptype-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');selectedPtype=btn.dataset.type;});});
+document.getElementById('cnc').addEventListener('click',()=>document.getElementById('sm2').style.display='none');
+document.getElementById('sm2').addEventListener('click',e=>{if(e.target===document.getElementById('sm2'))document.getElementById('sm2').style.display='none';});
+document.getElementById('mn').addEventListener('keydown',e=>{if(e.key==='Enter')doSave();});
+document.getElementById('csv').addEventListener('click',doSave);
+document.querySelectorAll('.pb3').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.pb3').forEach(x=>x.classList.remove('ac'));b.classList.add('ac');pty=b.dataset.t;});});
 
 function doSave(){
-  const name=document.getElementById('mname-input').value.trim();if(!name)return;
-  const{area,acres,ha,sqft,gunta}=calcArea();const perim=calcPerim();
-  const m={id:uid(),name,ptype:selectedPtype,points:JSON.parse(JSON.stringify(points)),area,acres,ha,sqft,gunta,perimeter:perim,timestamp:Date.now()};
-  measurements.push(m);try{localStorage.setItem('gps_lmp_v3',JSON.stringify(measurements));}catch(e){}
-  document.getElementById('save-modal').style.display='none';
-  if(savedOpen)renderSavedList();
+  const nm=document.getElementById('mn').value.trim();if(!nm)return;
+  const{a,ac,ha,sf,gu}=cArea();const pe=cPerim();
+  const m={id:uid(),name:nm,pt:pty,pts:JSON.parse(JSON.stringify(pts)),a,ac,ha,sf,gu,perimeter:pe,ts:Date.now()};
+  meas.push(m);try{localStorage.setItem('glmp4',JSON.stringify(meas));}catch(e){}
+  document.getElementById('sm2').style.display='none';
+  if(svOpen)rSL();
 }
 
 function loadM(id){
-  const m=measurements.find(x=>x.id===id);if(!m)return;
-  markers.forEach(mk=>map.removeLayer(mk));markers.clear();
-  if(polygon){map.removeLayer(polygon);polygon=null;}if(polyline){map.removeLayer(polyline);polyline=null;}
-  distLabels.forEach(l=>map.removeLayer(l));distLabels.length=0;
-  angleLabels.forEach(l=>map.removeLayer(l));angleLabels.length=0;
-  points=JSON.parse(JSON.stringify(m.points));selectedId=null;renderAll();
-  if(points.length){const mLat=points.reduce((a,p)=>a+p.lat,0)/points.length,mLng=points.reduce((a,p)=>a+p.lng,0)/points.length;map.flyTo([mLat,mLng],18,{duration:1.2});}
-  closeSaved();
+  const m=meas.find(x=>x.id===id);if(!m)return;
+  mkMap.forEach(mk=>map.removeLayer(mk));mkMap.clear();
+  if(poly){map.removeLayer(poly);poly=null;}if(pline){map.removeLayer(pline);pline=null;}
+  dls.forEach(l=>map.removeLayer(l));dls.length=0;als.forEach(l=>map.removeLayer(l));als.length=0;
+  pts=JSON.parse(JSON.stringify(m.pts));selId=null;renderAll();
+  if(pts.length){const mLa=pts.reduce((s,p)=>s+p.lat,0)/pts.length,mLn=pts.reduce((s,p)=>s+p.lng,0)/pts.length;map.flyTo([mLa,mLn],18,{duration:1.2});}
+  closeSV();
 }
 
-function exportM(id){
-  const m=measurements.find(x=>x.id===id);if(!m)return;
-  const sqft=m.sqft||m.area*10.7639;
-  const lines=['=================================================','      GPS LAND MEASURE PRO — FIELD REPORT','=================================================','',`Property   : ${m.name}`,`Type       : ${m.ptype||'Plot'}`,`Date       : ${new Date(m.timestamp).toLocaleString('en-IN')}`,`Reference  : ${m.id}`,'','-------------------------------------------------','  MEASUREMENTS','-------------------------------------------------',`Area       : ${m.area.toFixed(4)} m²`,`Sq. Feet   : ${sqft.toFixed(2)} sq ft`,`Acres      : ${m.acres.toFixed(6)} acres`,`Hectares   : ${m.ha.toFixed(6)} ha`,`Gunta      : ${(m.gunta||m.area/101.17).toFixed(4)} Gunta`,`Perimeter  : ${m.perimeter.toFixed(2)} m  (${(m.perimeter/1000).toFixed(4)} km)`,`Points     : ${m.points.length}`,'','-------------------------------------------------','  BOUNDARY COORDINATES (WGS84 / GPS)','-------------------------------------------------',...m.points.map((p,i)=>`  [${i+1}]  Lat: ${p.lat.toFixed(8)}   Lng: ${p.lng.toFixed(8)}`),'','-------------------------------------------------','  ⚠  For legal/official purposes, verify with','  a licensed land surveyor.','  Generated by GPS Land Measure Pro v3','================================================='];
+function expM(id){
+  const m=meas.find(x=>x.id===id);if(!m)return;
+  const sf=m.sf||m.a*10.7639;
+  const lines=['=================================================','      GPS LAND MEASURE PRO — FIELD REPORT v3','=================================================','',`Property   : ${m.name}`,`Type       : ${m.pt||'Plot'}`,`Date       : ${new Date(m.ts).toLocaleString('en-IN')}`,`Reference  : ${m.id}`,'','-------------------------------------------------','  MEASUREMENTS','-------------------------------------------------',`Area       : ${m.a.toFixed(4)} m²`,`Sq. Feet   : ${sf.toFixed(2)} sq ft`,`Acres      : ${m.ac.toFixed(6)} acres`,`Hectares   : ${m.ha.toFixed(6)} ha`,`Gunta      : ${(m.gu||m.a/101.17).toFixed(4)} Gunta`,`Perimeter  : ${m.perimeter.toFixed(2)} m  (${(m.perimeter/1000).toFixed(4)} km)`,`Points     : ${m.pts.length}`,'','-------------------------------------------------','  BOUNDARY COORDINATES (WGS84/GPS)','-------------------------------------------------',...m.pts.map((p,i)=>`  [${i+1}]  Lat: ${p.lat.toFixed(8)}   Lng: ${p.lng.toFixed(8)}`),'','-------------------------------------------------','  ⚠ For legal/official purposes verify with','  a licensed land surveyor.','  GPS Land Measure Pro v3','================================================='];
   const blob=new Blob([lines.join('\n')],{type:'text/plain'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download=`${m.ptype}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}_${m.id}.txt`;
-  a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download=`${m.pt}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}.txt`;a.click();URL.revokeObjectURL(url);
 }
 
 // ── UTILS ──────────────────────────────────────────────────
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-document.addEventListener('click',()=>{searchResults.style.display='none';document.getElementById('layer-dropdown').style.display='none';});
-document.getElementById('search-wrap').addEventListener('click',e=>e.stopPropagation());
-document.getElementById('layer-wrap').addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>{res.style.display='none';document.getElementById('ld').style.display='none';});
+document.getElementById('sw').addEventListener('click',e=>e.stopPropagation());
+document.getElementById('lw').addEventListener('click',e=>e.stopPropagation());
 
-initMap();updateUI();
+initMap();updUI();
 </script>
 </body>
 </html>
