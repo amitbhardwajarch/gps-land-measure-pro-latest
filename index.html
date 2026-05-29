@@ -11,7 +11,7 @@
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--p:#00d4aa;--pd:#00a882;--a:#ff6b35;--a2:#ffd700;--bg:#0a0e1a;--card:rgba(14,20,38,0.97);--b:rgba(0,212,170,0.22);--bb:rgba(0,212,170,0.55);--t:#e8f4f0;--td:rgba(232,244,240,0.55);--tb:#fff;--d:#ff4757;--w:#ffa502;--sh:0 4px 24px rgba(0,0,0,0.65);--sg:0 0 20px rgba(0,212,170,0.22);--f:'Rajdhani',sans-serif;--m:'JetBrains Mono',monospace;--r:12px}
+:root{--p:#00d4aa;--a:#ff6b35;--a2:#ffd700;--bg:#0a0e1a;--card:rgba(14,20,38,0.97);--b:rgba(0,212,170,0.22);--bb:rgba(0,212,170,0.55);--t:#e8f4f0;--td:rgba(232,244,240,0.55);--tb:#fff;--d:#ff4757;--w:#ffa502;--sh:0 4px 24px rgba(0,0,0,0.65);--sg:0 0 20px rgba(0,212,170,0.22);--f:'Rajdhani',sans-serif;--m:'JetBrains Mono',monospace;--r:12px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--f);color:var(--t)}
 #map{position:absolute;inset:0;z-index:0;cursor:crosshair!important}
@@ -28,21 +28,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .ib{width:42px;height:42px;border-radius:var(--r);flex-shrink:0;background:var(--card);border:1px solid var(--b);color:var(--t);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--sh);transition:all 0.15s}
 .ib:hover{border-color:var(--bb)}
 #sw{flex:1;position:relative}
-/* Google Places Autocomplete input styling */
-#pac-input{width:100%;background:var(--card);border:1px solid var(--b);border-radius:var(--r);color:var(--t);font-family:var(--f);font-size:15px;padding:10px 14px 10px 42px;outline:none;box-shadow:var(--sh);letter-spacing:0.02em;-webkit-appearance:none}
-#pac-input::placeholder{color:var(--td)}
-#pac-input:focus{border-color:var(--bb)}
-#pac-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--p);font-size:16px;pointer-events:none;z-index:1}
-/* Override Google autocomplete dropdown */
-.pac-container{background:var(--card)!important;border:1px solid var(--bb)!important;border-radius:0 0 var(--r) var(--r)!important;box-shadow:0 8px 32px rgba(0,0,0,0.8)!important;margin-top:0!important;font-family:var(--f)!important;z-index:3000!important}
-.pac-item{padding:10px 14px!important;border-top:1px solid rgba(0,212,170,0.08)!important;cursor:pointer!important;color:var(--t)!important;font-size:13px!important;line-height:1.4!important}
-.pac-item:hover{background:rgba(0,212,170,0.09)!important}
-.pac-item-query{color:var(--tb)!important;font-weight:600!important;font-size:14px!important}
-.pac-matched{color:var(--p)!important;font-weight:700!important}
-.pac-icon{display:none!important}
-.pac-logo::after{display:none!important}
-/* Coord search fallback */
-#coord-hint{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--td);display:none;z-index:2000;box-shadow:var(--sh)}
+#sb{display:flex;align-items:center;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+#si-icon{padding:0 10px;color:var(--p);font-size:16px;flex-shrink:0;min-width:38px;display:flex;align-items:center;justify-content:center}
+#si{flex:1;background:none;border:none;outline:none;color:var(--t);font-family:var(--f);font-size:15px;padding:10px 0;letter-spacing:0.02em}
+#si::placeholder{color:var(--td)}
+#sc{padding:0 10px;background:none;border:none;color:var(--td);cursor:pointer;font-size:20px;flex-shrink:0}
+#sr{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--bb);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,0.85);overflow:hidden;z-index:3000;display:none;max-height:400px;overflow-y:auto}
+.ri{padding:11px 14px;border-bottom:1px solid rgba(0,212,170,0.07);cursor:pointer;transition:background 0.1s}
+.ri:hover,.ri:active{background:rgba(0,212,170,0.1)}
+.ri:last-child{border-bottom:none}
+.r-main{font-weight:600;font-size:14px;color:var(--tb);margin-bottom:2px}
+.r-sec{color:var(--td);font-size:11px;line-height:1.4}
+.r-badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-family:var(--m);font-weight:700;margin-top:3px;letter-spacing:0.05em}
+.bg{background:rgba(66,133,244,0.18);color:#4285f4;border:1px solid rgba(66,133,244,0.3)}
+.bc{background:rgba(255,215,0,0.15);color:var(--a2);border:1px solid rgba(255,215,0,0.3)}
+.r-none{padding:14px;color:var(--td);font-size:13px;text-align:center}
+.r-tip{padding:10px 14px;font-size:11px;color:rgba(255,107,53,0.85);background:rgba(255,107,53,0.05);line-height:1.7;border-top:1px solid rgba(255,107,53,0.1)}
 #lw{position:relative}
 #ld{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);min-width:130px;display:none;z-index:2000}
 .li{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;font-family:var(--f)}
@@ -112,8 +113,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 #zb{position:absolute;right:10px;bottom:90px;z-index:1000;display:flex;flex-direction:column;gap:4px}
 .zbt{width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--b);color:var(--t);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);line-height:1}
 .zbt:hover{border-color:var(--bb)}
-#gps-btn{position:absolute;right:10px;bottom:140px;z-index:1000;width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--b);color:var(--p);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh)}
-#gps-btn:hover{border-color:var(--bb)}
+#gps-btn{position:absolute;right:10px;bottom:140px;z-index:1000;width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid rgba(0,212,170,0.4);color:var(--p);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh)}
 .sp{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,212,170,0.3);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 ::-webkit-scrollbar{width:4px}
@@ -128,9 +128,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
     <svg width="18" height="14" viewBox="0 0 18 14"><rect y="0" width="18" height="2" rx="1" fill="currentColor"/><rect y="6" width="18" height="2" rx="1" fill="currentColor"/><rect y="12" width="18" height="2" rx="1" fill="currentColor"/></svg>
   </button>
   <div id="sw">
-    <span id="pac-icon">🔍</span>
-    <input id="pac-input" type="text" placeholder="H.no 219, Neki Ram Marg, Sector 7, Gurgaon..." autocomplete="off"/>
-    <div id="coord-hint"></div>
+    <div id="sb">
+      <span id="si-icon">🔍</span>
+      <input id="si" type="text" placeholder="H.no 219, Neki Ram Marg, Sector 7, Gurgaon..." autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button id="sc" style="display:none">×</button>
+    </div>
+    <div id="sr"></div>
   </div>
   <div id="lw">
     <button class="ib" id="lb">🗺️</button>
@@ -215,113 +218,216 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
   </div>
 </div>
 
-<!-- Google Maps JS API with Places library - loaded here so it runs from the page domain -->
 <script>
-// Google Maps API Key
+// ── CONFIG ─────────────────────────────────────────────────
+// Google Geocoding API only (NOT Maps JS API - no popup error)
+// Leaflet handles the map - completely free & no API restrictions
 const GK='AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY';
-let autocomplete=null,geocoder=null,map=null,bTile=null,lTile=null;
-let pts=[],selId=null,coOpen=false,svOpen=false,pty='Plot';
-let meas=[];try{meas=JSON.parse(localStorage.getItem('glmp5')||'[]')}catch(e){}
+
+// ── STATE ──────────────────────────────────────────────────
+let pts=[],selId=null,coOpen=false,svOpen=false,pty='Plot',dt=null;
+let meas=[];try{meas=JSON.parse(localStorage.getItem('glmp6')||'[]')}catch(e){}
+let map,bTile,lTile;
 const mkMap=new Map();
 let poly=null,pline=null;
 const dls=[],als=[];
 
-// Init Leaflet map
+// ── LEAFLET MAP (free, no API key needed) ──────────────────
 function initMap(){
   map=L.map('map',{center:[28.4595,77.0266],zoom:15,zoomControl:false});
-  bTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:21}).addTo(map);
+  bTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',maxZoom:21
+  }).addTo(map);
   map.on('click',e=>addPt(e.latlng.lat,e.latlng.lng));
 }
 
-// Called by Google Maps API after loading
-function initGoogleMaps(){
-  // Google Places Autocomplete Widget - handles all search UI natively
-  const inp=document.getElementById('pac-input');
-  autocomplete=new google.maps.places.Autocomplete(inp,{
-    componentRestrictions:{country:'in'},
-    fields:['geometry','name','formatted_address'],
-    types:[] // all types - houses, plots, factories, land
-  });
-  geocoder=new google.maps.Geocoder();
-
-  // When user selects a result from dropdown
-  autocomplete.addListener('place_changed',()=>{
-    const place=autocomplete.getPlace();
-    if(!place.geometry||!place.geometry.location){
-      // Address not found in autocomplete - try geocoding
-      geocodeAddress(inp.value);
-      return;
-    }
-    const lat=place.geometry.location.lat();
-    const lng=place.geometry.location.lng();
-    map.flyTo([lat,lng],19,{duration:1.0});
-    console.log('Found:',place.formatted_address,lat,lng);
-  });
-
-  // Also handle Enter key for manual geocoding
-  inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      // Small delay to let autocomplete selection happen first
-      setTimeout(()=>{
-        const place=autocomplete.getPlace();
-        if(!place||!place.geometry){
-          geocodeAddress(inp.value);
-        }
-      },100);
-    }
-  });
-}
-
-function geocodeAddress(addr){
-  if(!geocoder)return;
-  // Check if it's coordinates
-  const cm=addr.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
-  if(cm){
-    const la=parseFloat(cm[1]),ln=parseFloat(cm[2]);
-    if(la>=-90&&la<=90&&ln>=-180&&ln<=180){
-      map.flyTo([la,ln],19,{duration:1.0});return;
-    }
-  }
-  geocoder.geocode({address:addr+', India',region:'in'},(results,status)=>{
-    if(status==='OK'&&results[0]){
-      const loc=results[0].geometry.location;
-      map.flyTo([loc.lat(),loc.lng()],19,{duration:1.0});
-    }
-  });
-}
-
-// Layers
-const TL={street:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',satellite:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'};
+// ── LAYERS ─────────────────────────────────────────────────
+const TL={
+  street:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  satellite:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+};
 function setLayer(l){
-  if(bTile)map.removeLayer(bTile);if(lTile){map.removeLayer(lTile);lTile=null;}
+  if(bTile)map.removeLayer(bTile);
+  if(lTile){map.removeLayer(lTile);lTile=null;}
   bTile=L.tileLayer(TL[l==='hybrid'?'satellite':l],{maxZoom:21}).addTo(map);
-  if(l==='hybrid'){lTile=L.tileLayer(TL.street,{opacity:0.45,maxZoom:21}).addTo(map);}
+  if(l==='hybrid'){lTile=L.tileLayer(TL.street,{opacity:0.4,maxZoom:21}).addTo(map);}
   document.querySelectorAll('.li').forEach(e=>e.classList.toggle('active',e.dataset.l===l));
   document.getElementById('lb').textContent={street:'🗺️',satellite:'🛰️',hybrid:'🌍'}[l];
   document.getElementById('ld').style.display='none';
 }
-document.getElementById('lb').addEventListener('click',e=>{e.stopPropagation();const d=document.getElementById('ld');d.style.display=d.style.display==='block'?'none':'block';});
+document.getElementById('lb').addEventListener('click',e=>{
+  e.stopPropagation();
+  const d=document.getElementById('ld');
+  d.style.display=d.style.display==='block'?'none':'block';
+});
 document.querySelectorAll('.li').forEach(e=>e.addEventListener('click',()=>setLayer(e.dataset.l)));
 document.getElementById('bzi').addEventListener('click',()=>map.zoomIn());
 document.getElementById('bzo').addEventListener('click',()=>map.zoomOut());
 
-// GPS My Location
+// ── GPS MY LOCATION ────────────────────────────────────────
 document.getElementById('gps-btn').addEventListener('click',()=>{
   const btn=document.getElementById('gps-btn');
-  btn.textContent='⏳';
-  if(!navigator.geolocation){btn.textContent='📍';alert('GPS not available');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    btn.textContent='📍';
-    map.flyTo([pos.coords.latitude,pos.coords.longitude],18,{duration:1.0});
-  },err=>{btn.textContent='📍';alert('Location access denied. Please allow location permission.');},{enableHighAccuracy:true,timeout:10000});
+  btn.innerHTML='<span class="sp"></span>';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      btn.textContent='📍';
+      map.flyTo([pos.coords.latitude,pos.coords.longitude],18,{duration:1.0});
+    },
+    ()=>{btn.textContent='📍';alert('Location denied. Please allow GPS access.');},
+    {enableHighAccuracy:true,timeout:10000}
+  );
 });
 
-// Points
+// ── GOOGLE GEOCODING SEARCH (REST API - no Maps JS popup) ──
+const inp=document.getElementById('si');
+const res=document.getElementById('sr');
+const ico=document.getElementById('si-icon');
+const clr=document.getElementById('sc');
+
+inp.addEventListener('input',()=>{
+  const q=inp.value.trim();
+  clr.style.display=q?'block':'none';
+  if(dt)clearTimeout(dt);
+  if(!q){res.style.display='none';return;}
+  dt=setTimeout(()=>search(q),350);
+});
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter')search(inp.value.trim());
+  if(e.key==='Escape')res.style.display='none';
+});
+clr.addEventListener('click',()=>{inp.value='';res.style.display='none';clr.style.display='none';});
+
+async function search(q){
+  if(!q)return;
+
+  // Direct coordinate input: "28.45, 77.03"
+  const cm=q.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if(cm){
+    const la=parseFloat(cm[1]),ln=parseFloat(cm[2]);
+    if(la>=-90&&la<=90&&ln>=-180&&ln<=180){
+      showRes([{la,ln,main:`📍 ${la.toFixed(6)}, ${ln.toFixed(6)}`,sec:'Go to coordinates',src:'c'}]);
+      return;
+    }
+  }
+
+  ico.innerHTML='<span class="sp"></span>';
+
+  // Use Google Geocoding REST API + Photon in parallel
+  // Google Geocoding API does NOT require Maps JS API - just the key
+  const [gRes,pRes]=await Promise.allSettled([
+    googleGeocode(q),
+    photonSearch(q)
+  ]);
+
+  ico.textContent='🔍';
+
+  const results=[];
+  const seen=new Set();
+  const add=(r)=>{
+    const k=`${parseFloat(r.la).toFixed(3)},${parseFloat(r.ln).toFixed(3)}`;
+    if(!seen.has(k)){seen.add(k);results.push(r);}
+  };
+
+  if(gRes.status==='fulfilled')gRes.value.forEach(add);
+  if(pRes.status==='fulfilled')pRes.value.forEach(add);
+
+  showRes(results,q);
+}
+
+async function googleGeocode(q){
+  // Google Geocoding REST API - works with just API key, NO Maps JS needed
+  // This is what Google Maps itself uses for address search
+  const queries=[
+    q+', India',
+    q.replace(/^h\.?no\.?\s*/i,'House No '),
+    q.replace(/^plot\s*/i,'Plot No ')
+  ];
+
+  for(const qq of queries){
+    try{
+      const url=`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(qq)}&region=in&language=en&key=${GK}`;
+      const r=await fetch(url);
+      const d=await r.json();
+      if(d.status==='OK'&&d.results&&d.results.length){
+        return d.results.slice(0,5).map(r=>{
+          const parts=r.formatted_address.split(',');
+          return{
+            la:r.geometry.location.lat,
+            ln:r.geometry.location.lng,
+            main:parts[0].trim(),
+            sec:parts.slice(1,4).join(',').trim(),
+            src:'g'
+          };
+        });
+      }
+      if(d.status==='REQUEST_DENIED'||d.status==='INVALID_REQUEST')return[];
+    }catch(e){}
+  }
+  return[];
+}
+
+async function photonSearch(q){
+  try{
+    const url=`https://photon.komoot.io/api/?q=${encodeURIComponent(q+' India')}&limit=4&lang=en`;
+    const r=await fetch(url);
+    const d=await r.json();
+    return(d.features||[]).map(f=>{
+      const p=f.properties;
+      const main=[p.housenumber,p.name,p.street].filter(Boolean).join(' ')||p.city||'';
+      const sec=[p.district,p.city,p.state].filter(Boolean).join(', ');
+      return{la:f.geometry.coordinates[1],ln:f.geometry.coordinates[0],main,sec,src:'o'};
+    }).filter(r=>r.main);
+  }catch(e){return[];}
+}
+
+function showRes(results,q){
+  if(!results||!results.length){
+    res.innerHTML=`
+      <div class="r-none">No results found</div>
+      <div class="r-tip">
+        💡 Try more specific address:<br>
+        • "H.No 219, Neki Ram Marg, Sector 7, Gurgaon"<br>
+        • "Plot 47, Sector 9, Gurugram, Haryana"<br>
+        • "Khasra 456, Village Bajghera, Gurugram"<br>
+        • Or paste coordinates: "28.4595, 77.0266"
+      </div>`;
+    res.style.display='block';
+    return;
+  }
+  res.innerHTML=results.map((r,i)=>`
+    <div class="ri" data-i="${i}">
+      <div class="r-main">${escH(r.main)}</div>
+      ${r.sec?`<div class="r-sec">${escH(r.sec)}</div>`:''}
+      <span class="r-badge ${r.src==='c'?'bc':r.src==='g'?'bg':''}">
+        ${r.src==='c'?'COORDS':r.src==='g'?'GOOGLE':'OSM'}
+      </span>
+    </div>`).join('');
+  res.style.display='block';
+  res.querySelectorAll('.ri').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const r=results[parseInt(el.dataset.i)];
+      map.flyTo([r.la,r.ln],19,{duration:1.0});
+      inp.value=r.main;
+      res.style.display='none';
+    });
+  });
+}
+
+// ── POINTS ─────────────────────────────────────────────────
 function uid(){return Math.random().toString(36).slice(2,10);}
 function addPt(la,ln){pts.push({id:uid(),lat:la,lng:ln,label:pts.length+1});selId=null;renderAll();}
-document.getElementById('bu').addEventListener('click',()=>{if(!pts.length)return;const r=pts.pop();const m=mkMap.get(r.id);if(m){map.removeLayer(m);mkMap.delete(r.id);}selId=null;renderAll();});
-document.getElementById('bd').addEventListener('click',()=>{if(!selId)return;const m=mkMap.get(selId);if(m){map.removeLayer(m);mkMap.delete(selId);}pts=pts.filter(p=>p.id!==selId).map((p,i)=>({...p,label:i+1}));selId=null;renderAll();});
-document.getElementById('bc').addEventListener('click',()=>{pts=[];selId=null;mkMap.forEach(m=>map.removeLayer(m));mkMap.clear();renderAll();});
+
+document.getElementById('bu').addEventListener('click',()=>{
+  if(!pts.length)return;const r=pts.pop();const m=mkMap.get(r.id);
+  if(m){map.removeLayer(m);mkMap.delete(r.id);}selId=null;renderAll();
+});
+document.getElementById('bd').addEventListener('click',()=>{
+  if(!selId)return;const m=mkMap.get(selId);if(m){map.removeLayer(m);mkMap.delete(selId);}
+  pts=pts.filter(p=>p.id!==selId).map((p,i)=>({...p,label:i+1}));selId=null;renderAll();
+});
+document.getElementById('bc').addEventListener('click',()=>{
+  pts=[];selId=null;mkMap.forEach(m=>map.removeLayer(m));mkMap.clear();renderAll();
+});
 function selPt(id){selId=selId===id?null:id;renderAll();}
 function renderAll(){rMk();rPoly();rDist();rAng();updUI();}
 
@@ -332,19 +438,32 @@ function rMk(){
     const s=p.id===selId;
     const ic=L.divIcon({className:'',html:`<div class="mm${s?' sel':''}">${p.label}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
     if(mkMap.has(p.id)){mkMap.get(p.id).setLatLng([p.lat,p.lng]).setIcon(ic);}
-    else{const mk=L.marker([p.lat,p.lng],{icon:ic,zIndexOffset:1000}).addTo(map);mk.on('click',e=>{L.DomEvent.stopPropagation(e);selPt(p.id);});mkMap.set(p.id,mk);}
+    else{
+      const mk=L.marker([p.lat,p.lng],{icon:ic,zIndexOffset:1000}).addTo(map);
+      mk.on('click',e=>{L.DomEvent.stopPropagation(e);selPt(p.id);});
+      mkMap.set(p.id,mk);
+    }
   });
 }
 function rPoly(){
-  if(poly){map.removeLayer(poly);poly=null;}if(pline){map.removeLayer(pline);pline=null;}
+  if(poly){map.removeLayer(poly);poly=null;}
+  if(pline){map.removeLayer(pline);pline=null;}
   if(pts.length>=3){poly=L.polygon(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,opacity:.9,fillColor:'#00d4aa',fillOpacity:.1}).addTo(map);}
   else if(pts.length===2){pline=L.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,dashArray:'6 4'}).addTo(map);}
 }
+
+// ── GEOMETRY ───────────────────────────────────────────────
 function hav(a,b,c,d){const R=6371000,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 function rDist(){
   dls.forEach(l=>map.removeLayer(l));dls.length=0;
   if(pts.length<2)return;const n=pts.length,c=n>=3?n:n-1;
-  for(let i=0;i<c;i++){const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;dls.push(L.marker([(a.lat+b.lat)/2,(a.lng+b.lng)/2],{icon:L.divIcon({className:'dist-lbl',html:fD(hav(a.lat,a.lng,b.lat,b.lng)),iconAnchor:[20,10]}),interactive:false,zIndexOffset:500}).addTo(map));}
+  for(let i=0;i<c;i++){
+    const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;
+    dls.push(L.marker([(a.lat+b.lat)/2,(a.lng+b.lng)/2],{
+      icon:L.divIcon({className:'dist-lbl',html:fD(hav(a.lat,a.lng,b.lat,b.lng)),iconAnchor:[20,10]}),
+      interactive:false,zIndexOffset:500
+    }).addTo(map));
+  }
 }
 function rAng(){
   als.forEach(l=>map.removeLayer(l));als.length=0;
@@ -354,19 +473,30 @@ function rAng(){
     const v1={x:pv.lng-cu.lng,y:pv.lat-cu.lat},v2={x:nx.lng-cu.lng,y:nx.lat-cu.lat};
     const dot=v1.x*v2.x+v1.y*v2.y,mg=Math.sqrt((v1.x**2+v1.y**2)*(v2.x**2+v2.y**2));
     if(!mg)continue;
-    als.push(L.marker([cu.lat,cu.lng],{icon:L.divIcon({className:'ang-lbl',html:`${Math.round(Math.acos(Math.max(-1,Math.min(1,dot/mg)))*1800)/10}°`,iconAnchor:[-6,22]}),interactive:false,zIndexOffset:400}).addTo(map));
+    als.push(L.marker([cu.lat,cu.lng],{
+      icon:L.divIcon({className:'ang-lbl',html:`${Math.round(Math.acos(Math.max(-1,Math.min(1,dot/mg)))*1800)/10}°`,iconAnchor:[-6,22]}),
+      interactive:false,zIndexOffset:400
+    }).addTo(map));
   }
 }
 function cArea(){
   if(pts.length<3)return{a:0,ac:0,ha:0,sf:0,gu:0};
-  try{const c=[...pts.map(p=>[p.lng,p.lat]),[pts[0].lng,pts[0].lat]];const a=turf.area(turf.polygon([c]));return{a,ac:a/4046.856,ha:a/10000,sf:a*10.7639,gu:a/101.17};}
-  catch(e){return{a:0,ac:0,ha:0,sf:0,gu:0};}
+  try{
+    const c=[...pts.map(p=>[p.lng,p.lat]),[pts[0].lng,pts[0].lat]];
+    const a=turf.area(turf.polygon([c]));
+    return{a,ac:a/4046.856,ha:a/10000,sf:a*10.7639,gu:a/101.17};
+  }catch(e){return{a:0,ac:0,ha:0,sf:0,gu:0};}
 }
-function cPerim(){if(pts.length<2)return 0;let t=0;const n=pts.length;for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;t+=hav(a.lat,a.lng,b.lat,b.lng);}return t;}
+function cPerim(){
+  if(pts.length<2)return 0;let t=0;const n=pts.length;
+  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;t+=hav(a.lat,a.lng,b.lat,b.lng);}
+  return t;
+}
 function fD(m){return m>=1000?`${(m/1e3).toFixed(2)}km`:m>=1?`${m.toFixed(1)}m`:`${(m*100).toFixed(0)}cm`;}
 function fA(s){return s>=1e6?`${(s/1e6).toFixed(4)}km²`:s>=1e4?`${(s/1e4).toFixed(4)}ha`:`${s.toFixed(2)}m²`;}
 function fSF(f){return f>0?`${Math.round(f).toLocaleString()} sq ft`:'—';}
 
+// ── UI ─────────────────────────────────────────────────────
 function updUI(){
   const n=pts.length,hp=n>0,hs=!!selId;
   document.getElementById('bu').disabled=!hp;document.getElementById('bd').disabled=!hs;
@@ -399,32 +529,58 @@ function togSV(){svOpen=!svOpen;if(coOpen)closeCO();document.getElementById('sd'
 function closeSV(){svOpen=false;document.getElementById('sd').style.display='none';document.getElementById('bsd').classList.remove('ac');}
 document.getElementById('bco').addEventListener('click',togCO);document.getElementById('bsd').addEventListener('click',togSV);
 document.getElementById('cc').addEventListener('click',closeCO);document.getElementById('cs').addEventListener('click',closeSV);
+
 const TI=t=>({Plot:'🏗',House:'🏠',Factory:'🏭',Land:'🌾',Field:'🌿'}[t]||'📌');
 function rSL(){
   const l=document.getElementById('sl');document.getElementById('sd-n').textContent=meas.length;
-  if(!meas.length){l.innerHTML='<div class="em">No saved measurements yet.</div>';return;}
-  l.innerHTML=[...meas].reverse().map(m=>`<div class="si2"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="sn">${TI(m.pt)} ${escH(m.name)}</div><div class="sm">${new Date(m.ts).toLocaleDateString('en-IN')} · ${m.pts.length} pts · ${m.pt}</div></div><div style="text-align:right"><div class="sa">${fA(m.a)}</div><div class="sf2">${fSF(m.sf||m.a*10.7639)}</div></div></div><div class="sbt"><button class="sb2 sbl" data-id="${m.id}">Load</button><button class="sb2 sbe" data-id="${m.id}">Export</button><button class="sb2 sbd" data-id="${m.id}">Delete</button></div></div>`).join('');
+  if(!meas.length){l.innerHTML='<div class="em">No saved measurements yet.<br><span style="opacity:0.6;font-size:11px">Tap 💾 after drawing a boundary</span></div>';return;}
+  l.innerHTML=[...meas].reverse().map(m=>`
+    <div class="si2">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div class="sn">${TI(m.pt)} ${escH(m.name)}</div><div class="sm">${new Date(m.ts).toLocaleDateString('en-IN')} · ${m.pts.length} pts · ${m.pt}</div></div>
+        <div style="text-align:right"><div class="sa">${fA(m.a)}</div><div class="sf2">${fSF(m.sf||m.a*10.7639)}</div></div>
+      </div>
+      <div class="sbt">
+        <button class="sb2 sbl" data-id="${m.id}">Load</button>
+        <button class="sb2 sbe" data-id="${m.id}">Export</button>
+        <button class="sb2 sbd" data-id="${m.id}">Delete</button>
+      </div>
+    </div>`).join('');
   l.querySelectorAll('.sbl').forEach(b=>b.addEventListener('click',()=>loadM(b.dataset.id)));
   l.querySelectorAll('.sbe').forEach(b=>b.addEventListener('click',()=>expM(b.dataset.id)));
-  l.querySelectorAll('.sbd').forEach(b=>b.addEventListener('click',()=>{meas=meas.filter(m=>m.id!==b.dataset.id);try{localStorage.setItem('glmp5',JSON.stringify(meas));}catch(e){}rSL();}));
+  l.querySelectorAll('.sbd').forEach(b=>b.addEventListener('click',()=>{
+    meas=meas.filter(m=>m.id!==b.dataset.id);
+    try{localStorage.setItem('glmp6',JSON.stringify(meas));}catch(e){}
+    rSL();
+  }));
 }
+
 document.getElementById('bsave').addEventListener('click',()=>{
   if(!pts.length)return;const{a,sf,ac}=cArea();const pe=cPerim();
-  document.getElementById('mo-a').textContent=fA(a);document.getElementById('mo-sf').textContent=fSF(sf);
-  document.getElementById('mo-ac').textContent=`${ac.toFixed(4)} ac`;document.getElementById('mo-pe').textContent=fD(pe);
-  document.getElementById('mn').value='';document.getElementById('sm2').style.display='flex';
+  document.getElementById('mo-a').textContent=fA(a);
+  document.getElementById('mo-sf').textContent=fSF(sf);
+  document.getElementById('mo-ac').textContent=`${ac.toFixed(4)} ac`;
+  document.getElementById('mo-pe').textContent=fD(pe);
+  document.getElementById('mn').value='';
+  document.getElementById('sm2').style.display='flex';
   setTimeout(()=>document.getElementById('mn').focus(),100);
 });
 document.getElementById('cnc').addEventListener('click',()=>document.getElementById('sm2').style.display='none');
 document.getElementById('sm2').addEventListener('click',e=>{if(e.target===document.getElementById('sm2'))document.getElementById('sm2').style.display='none';});
 document.getElementById('mn').addEventListener('keydown',e=>{if(e.key==='Enter')doSave();});
 document.getElementById('csv').addEventListener('click',doSave);
-document.querySelectorAll('.pb3').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.pb3').forEach(x=>x.classList.remove('ac'));b.classList.add('ac');pty=b.dataset.t;});});
+document.querySelectorAll('.pb3').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.pb3').forEach(x=>x.classList.remove('ac'));
+    b.classList.add('ac');pty=b.dataset.t;
+  });
+});
+
 function doSave(){
   const nm=document.getElementById('mn').value.trim();if(!nm)return;
   const{a,ac,ha,sf,gu}=cArea();const pe=cPerim();
   const m={id:uid(),name:nm,pt:pty,pts:JSON.parse(JSON.stringify(pts)),a,ac,ha,sf,gu,perimeter:pe,ts:Date.now()};
-  meas.push(m);try{localStorage.setItem('glmp5',JSON.stringify(meas));}catch(e){}
+  meas.push(m);try{localStorage.setItem('glmp6',JSON.stringify(meas));}catch(e){}
   document.getElementById('sm2').style.display='none';if(svOpen)rSL();
 }
 function loadM(id){
@@ -433,24 +589,41 @@ function loadM(id){
   if(poly){map.removeLayer(poly);poly=null;}if(pline){map.removeLayer(pline);pline=null;}
   dls.forEach(l=>map.removeLayer(l));dls.length=0;als.forEach(l=>map.removeLayer(l));als.length=0;
   pts=JSON.parse(JSON.stringify(m.pts));selId=null;renderAll();
-  if(pts.length){const mLa=pts.reduce((s,p)=>s+p.lat,0)/pts.length,mLn=pts.reduce((s,p)=>s+p.lng,0)/pts.length;map.flyTo([mLa,mLn],18,{duration:1.2});}
+  if(pts.length){
+    const mLa=pts.reduce((s,p)=>s+p.lat,0)/pts.length;
+    const mLn=pts.reduce((s,p)=>s+p.lng,0)/pts.length;
+    map.flyTo([mLa,mLn],18,{duration:1.2});
+  }
   closeSV();
 }
 function expM(id){
   const m=meas.find(x=>x.id===id);if(!m)return;const sf=m.sf||m.a*10.7639;
-  const lines=['=================================================','   GPS LAND MEASURE PRO — FIELD REPORT v4','=================================================','',`Property   : ${m.name}`,`Type       : ${m.pt}`,`Date       : ${new Date(m.ts).toLocaleString('en-IN')}`,`Reference  : ${m.id}`,'',`Area (m²)  : ${m.a.toFixed(4)}`,`Sq. Feet   : ${sf.toFixed(2)}`,`Acres      : ${m.ac.toFixed(6)}`,`Hectares   : ${m.ha.toFixed(6)}`,`Gunta      : ${(m.gu||m.a/101.17).toFixed(4)}`,`Perimeter  : ${m.perimeter.toFixed(2)} m`,'','----- BOUNDARY COORDINATES (WGS84) -----',...m.pts.map((p,i)=>`[${i+1}] Lat:${p.lat.toFixed(8)} Lng:${p.lng.toFixed(8)}`),'','GPS Land Measure Pro v4','================================================='];
-  const blob=new Blob([lines.join('\n')],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${m.pt}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}.txt`;a.click();URL.revokeObjectURL(url);
+  const lines=[
+    '=================================================',
+    '   GPS LAND MEASURE PRO — FIELD REPORT',
+    '=================================================','',
+    `Property   : ${m.name}`,`Type       : ${m.pt}`,
+    `Date       : ${new Date(m.ts).toLocaleString('en-IN')}`,`Reference  : ${m.id}`,'',
+    `Area (m²)  : ${m.a.toFixed(4)}`,`Sq. Feet   : ${sf.toFixed(2)}`,
+    `Acres      : ${m.ac.toFixed(6)}`,`Hectares   : ${m.ha.toFixed(6)}`,
+    `Gunta      : ${(m.gu||m.a/101.17).toFixed(4)}`,`Perimeter  : ${m.perimeter.toFixed(2)} m`,'',
+    '----- BOUNDARY COORDINATES (WGS84) -----',
+    ...m.pts.map((p,i)=>`[${i+1}] Lat:${p.lat.toFixed(8)} Lng:${p.lng.toFixed(8)}`),
+    '','⚠ Verify with licensed surveyor for legal use.',
+    'GPS Land Measure Pro','================================================='
+  ];
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`${m.pt}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}.txt`;
+  a.click();URL.revokeObjectURL(url);
 }
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-document.addEventListener('click',()=>document.getElementById('ld').style.display='none');
-document.getElementById('lw').addEventListener('click',e=>e.stopPropagation());
-document.getElementById('sw').addEventListener('click',e=>e.stopPropagation());
 
-// Init everything
+document.addEventListener('click',()=>{res.style.display='none';document.getElementById('ld').style.display='none';});
+document.getElementById('sw').addEventListener('click',e=>e.stopPropagation());
+document.getElementById('lw').addEventListener('click',e=>e.stopPropagation());
+
 initMap();updUI();
 </script>
-
-<!-- Google Maps API loaded LAST so it runs from page domain - enables Places Autocomplete -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY&libraries=places&callback=initGoogleMaps&loading=async" async defer></script>
 </body>
 </html>
