@@ -5,625 +5,1149 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0a0e1a"/>
 <title>GPS Land Measure Pro</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--p:#00d4aa;--a:#ff6b35;--a2:#ffd700;--bg:#0a0e1a;--card:rgba(14,20,38,0.97);--b:rgba(0,212,170,0.22);--bb:rgba(0,212,170,0.55);--t:#e8f4f0;--td:rgba(232,244,240,0.55);--tb:#fff;--d:#ff4757;--w:#ffa502;--sh:0 4px 24px rgba(0,0,0,0.65);--sg:0 0 20px rgba(0,212,170,0.22);--f:'Rajdhani',sans-serif;--m:'JetBrains Mono',monospace;--r:12px}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--f);color:var(--t)}
-#map{position:absolute;inset:0;z-index:0;cursor:crosshair!important}
-.leaflet-container{cursor:crosshair!important}
-.leaflet-control-attribution{font-size:9px!important;opacity:0.4;background:rgba(0,0,0,0.4)!important;color:#aaa!important}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+:root{
+  --green:#10b981;--green-dim:rgba(16,185,129,0.15);--green-border:rgba(16,185,129,0.3);
+  --blue:#3b82f6;--amber:#f59e0b;--red:#ef4444;--white:#ffffff;
+  --gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;
+  --bg:#0f172a;--surface:rgba(15,23,42,0.95);--surface2:rgba(30,41,59,0.98);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.4),0 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.5),0 4px 6px -4px rgba(0,0,0,0.4);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,0.6);
+  --r:10px;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--text)}
+
+/* MAP */
+#map{position:absolute;inset:0;z-index:0}
+.leaflet-container{background:#1e293b!important;font-family:var(--font)!important}
+.leaflet-control-attribution{display:none!important}
 .leaflet-control-zoom{display:none!important}
-.mm{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--p);border:2.5px solid #fff;color:#0a0e1a;font-family:var(--f);font-weight:700;font-size:12px;box-shadow:0 2px 12px rgba(0,212,170,0.5),0 0 0 4px rgba(0,212,170,0.12);cursor:pointer;transition:transform 0.15s}
-.mm:hover{transform:scale(1.15)}
-.mm.sel{background:var(--a);box-shadow:0 2px 12px rgba(255,107,53,0.6)}
-.dist-lbl{background:rgba(10,14,26,0.9)!important;border:1px solid rgba(0,212,170,0.5)!important;color:var(--p)!important;font-family:var(--m)!important;font-size:10px!important;padding:2px 6px!important;border-radius:4px!important;white-space:nowrap!important;font-weight:500!important;pointer-events:none!important}
-.ang-lbl{background:rgba(10,14,26,0.9)!important;border:1px solid rgba(255,215,0,0.35)!important;color:var(--a2)!important;font-family:var(--m)!important;font-size:10px!important;padding:2px 5px!important;border-radius:4px!important;white-space:nowrap!important;pointer-events:none!important}
-.dist-lbl::before,.dist-lbl::after,.ang-lbl::before,.ang-lbl::after{display:none!important}
-#topbar{position:absolute;top:0;left:0;right:0;z-index:1000;padding:10px 10px 0;display:flex;gap:8px;align-items:flex-start}
-.ib{width:42px;height:42px;border-radius:var(--r);flex-shrink:0;background:var(--card);border:1px solid var(--b);color:var(--t);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--sh);transition:all 0.15s}
-.ib:hover{border-color:var(--bb)}
+
+/* MARKERS */
+.mk{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--green);border:2px solid var(--white);
+  color:#0f172a;font-family:var(--font);font-weight:700;font-size:13px;
+  box-shadow:0 0 0 4px rgba(16,185,129,0.2),var(--shadow);
+  cursor:pointer;transition:all 0.2s cubic-bezier(.34,1.56,.64,1);
+  user-select:none;
+}
+.mk:hover{transform:scale(1.18);box-shadow:0 0 0 6px rgba(16,185,129,0.3),var(--shadow-lg)}
+.mk.sel{background:var(--amber);border-color:var(--white);box-shadow:0 0 0 4px rgba(245,158,11,0.25),var(--shadow)}
+
+/* DISTANCE + ANGLE LABELS */
+.dl{
+  background:rgba(15,23,42,0.9)!important;
+  border:1px solid rgba(16,185,129,0.4)!important;
+  color:var(--green)!important;font-family:var(--mono)!important;
+  font-size:10px!important;font-weight:600!important;
+  padding:3px 7px!important;border-radius:6px!important;
+  white-space:nowrap!important;pointer-events:none!important;
+  box-shadow:var(--shadow)!important;letter-spacing:0.02em!important;
+}
+.al{
+  background:rgba(15,23,42,0.9)!important;
+  border:1px solid rgba(245,158,11,0.35)!important;
+  color:var(--amber)!important;font-family:var(--mono)!important;
+  font-size:10px!important;padding:2px 6px!important;
+  border-radius:6px!important;white-space:nowrap!important;
+  pointer-events:none!important;
+}
+.dl::before,.dl::after,.al::before,.al::after{display:none!important}
+
+/* TOP BAR */
+#topbar{
+  position:absolute;top:0;left:0;right:0;z-index:1000;
+  padding:12px;display:flex;gap:8px;align-items:center;
+  background:linear-gradient(to bottom,rgba(15,23,42,0.95) 0%,transparent 100%);
+  padding-bottom:24px;
+}
+
+/* ICON BUTTONS */
+.ib{
+  width:40px;height:40px;border-radius:var(--r);flex-shrink:0;
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;box-shadow:var(--shadow);
+  transition:all 0.15s ease;backdrop-filter:blur(8px);
+}
+.ib:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25)}
+.ib:active{transform:scale(0.95)}
+
+/* SEARCH */
 #sw{flex:1;position:relative}
-#sb{display:flex;align-items:center;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
-#si-icon{padding:0 10px;color:var(--p);font-size:16px;flex-shrink:0;min-width:38px;display:flex;align-items:center;justify-content:center}
-#si{flex:1;background:none;border:none;outline:none;color:var(--t);font-family:var(--f);font-size:15px;padding:10px 0;letter-spacing:0.02em}
-#si::placeholder{color:var(--td)}
-#sc{padding:0 10px;background:none;border:none;color:var(--td);cursor:pointer;font-size:20px;flex-shrink:0}
-#sr{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--bb);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,0.85);overflow:hidden;z-index:3000;display:none;max-height:400px;overflow-y:auto}
-.ri{padding:11px 14px;border-bottom:1px solid rgba(0,212,170,0.07);cursor:pointer;transition:background 0.1s}
-.ri:hover,.ri:active{background:rgba(0,212,170,0.1)}
+#sb{
+  display:flex;align-items:center;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--shadow);backdrop-filter:blur(8px);
+  transition:border-color 0.15s;
+}
+#sb:focus-within{border-color:var(--green)}
+#si-icon{padding:0 12px;color:var(--green);font-size:15px;flex-shrink:0}
+#si{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:var(--font);
+  font-size:14px;padding:11px 0;font-weight:400;
+}
+#si::placeholder{color:var(--text3)}
+#sc{
+  padding:0 12px;background:none;border:none;
+  color:var(--text3);cursor:pointer;font-size:18px;
+  transition:color 0.15s;flex-shrink:0;
+}
+#sc:hover{color:var(--text)}
+
+/* SEARCH RESULTS */
+#sr{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);box-shadow:var(--shadow-xl);
+  overflow:hidden;z-index:3000;display:none;
+  max-height:380px;overflow-y:auto;
+  backdrop-filter:blur(16px);
+  animation:dropIn 0.15s ease;
+}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.ri{
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.1s;display:flex;align-items:flex-start;gap:10px;
+}
+.ri:hover{background:rgba(255,255,255,0.05)}
+.ri:active{background:rgba(255,255,255,0.08)}
 .ri:last-child{border-bottom:none}
-.r-main{font-weight:600;font-size:14px;color:var(--tb);margin-bottom:2px}
-.r-sec{color:var(--td);font-size:11px;line-height:1.4}
-.r-badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-family:var(--m);font-weight:700;margin-top:3px;letter-spacing:0.05em}
-.bg{background:rgba(66,133,244,0.18);color:#4285f4;border:1px solid rgba(66,133,244,0.3)}
-.bc{background:rgba(255,215,0,0.15);color:var(--a2);border:1px solid rgba(255,215,0,0.3)}
-.r-none{padding:14px;color:var(--td);font-size:13px;text-align:center}
-.r-tip{padding:10px 14px;font-size:11px;color:rgba(255,107,53,0.85);background:rgba(255,107,53,0.05);line-height:1.7;border-top:1px solid rgba(255,107,53,0.1)}
+.ri-icon{font-size:16px;margin-top:1px;flex-shrink:0}
+.ri-body{flex:1;min-width:0}
+.r-main{font-weight:500;font-size:14px;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-sec{color:var(--text2);font-size:12px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-badge{
+  display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;
+  font-family:var(--mono);font-weight:700;letter-spacing:0.08em;margin-top:4px;
+}
+.bg-g{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.25)}
+.bg-c{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid var(--green-border)}
+.bg-o{background:rgba(100,116,139,0.15);color:var(--text2);border:1px solid rgba(100,116,139,0.2)}
+.r-section{
+  padding:6px 14px 4px;font-size:10px;font-weight:600;
+  color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;
+  background:rgba(0,0,0,0.2);
+}
+.r-empty{padding:20px 14px;text-align:center;color:var(--text3);font-size:13px}
+.r-tip{
+  padding:12px 14px;font-size:11px;color:var(--text2);
+  background:rgba(0,0,0,0.15);border-top:1px solid var(--border);
+  line-height:1.7;
+}
+.r-tip strong{color:var(--text)}
+
+/* LAYER SELECTOR */
 #lw{position:relative}
-#ld{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);min-width:130px;display:none;z-index:2000}
-.li{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;font-family:var(--f)}
-.li:hover{background:rgba(0,212,170,0.08)}
-.li.active{color:var(--p);background:rgba(0,212,170,0.1);font-weight:700}
-#tools{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:1000}
-.tb2{width:46px;height:46px;border-radius:10px;background:var(--card);border:1px solid var(--b);color:var(--t);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:var(--sh);transition:all 0.15s;font-family:var(--f);font-size:18px}
-.tb2:disabled{opacity:0.3;cursor:not-allowed}
-.tb2:not(:disabled):hover{border-color:var(--bb);transform:scale(1.04)}
-.tb2 .tl{font-size:9px;letter-spacing:0.05em;opacity:0.65}
-.tb2.dn{color:var(--d)}.tb2.wn{color:var(--w)}.tb2.pr{color:var(--p)}.tb2.gd{color:var(--a2)}.tb2.ac{background:rgba(0,212,170,0.12);border-color:var(--p)}
-.ts{height:1px;background:rgba(0,212,170,0.12);margin:4px 0}
-#mp{position:absolute;bottom:80px;left:10px;z-index:1000;background:var(--card);border:1px solid var(--bb);border-radius:14px;padding:12px 16px;min-width:205px;box-shadow:var(--sh),var(--sg);display:none}
-.mph{display:flex;align-items:center;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--b);padding-bottom:8px}
-.mpt{font-weight:700;font-size:13px;color:var(--p);letter-spacing:0.07em;text-transform:uppercase}
-.mpb{margin-left:auto;background:var(--p);color:var(--bg);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--m)}
-.mt{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
-.ml{font-size:10px;font-family:var(--f);letter-spacing:0.08em;color:var(--td);font-weight:600;flex-shrink:0;text-transform:uppercase}
-.mv{font-family:var(--m);font-size:12px;font-weight:500;color:var(--t);text-align:right}
-.mv.big{font-size:15px;font-weight:700;color:var(--p)}
-.mv.sf{color:var(--a2);font-size:13px;font-weight:700}
-.msp{height:1px;background:var(--b);margin:4px 0 6px}
-#cd{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--card);border-top:1px solid var(--bb);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:45vh;display:none;flex-direction:column}
-#sd{position:absolute;bottom:0;left:0;right:0;z-index:1100;background:var(--card);border-top:1px solid rgba(255,215,0,0.3);border-radius:16px 16px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,0.5);max-height:60vh;display:none;flex-direction:column}
-.dh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;flex-shrink:0;border-bottom:1px solid var(--b)}
-.dt{font-weight:700;font-size:14px;letter-spacing:0.06em;text-transform:uppercase}
-.dc{background:none;border:none;color:var(--td);cursor:pointer;font-size:22px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.db{overflow-y:auto;flex:1}
-.ch2{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:6px 16px;border-bottom:1px solid rgba(0,212,170,0.07);flex-shrink:0}
-.chh{font-size:10px;font-weight:700;color:var(--td);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--f)}
-.cr{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(0,212,170,0.04);cursor:pointer;transition:background 0.1s}
-.cr:hover{background:rgba(0,212,170,0.05)}
-.cr.sel{background:rgba(0,212,170,0.1)}
-.pb{width:22px;height:22px;border-radius:50%;background:var(--p);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--f);flex-shrink:0}
-.pb.sel{background:var(--a)}
-.cv{font-family:var(--m);font-size:12px;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.em{padding:24px 16px;color:var(--td);font-size:13px;text-align:center;line-height:1.6}
-.si2{padding:12px 16px;border-bottom:1px solid rgba(0,212,170,0.05)}
-.sn{font-weight:700;font-size:15px;color:var(--tb)}
-.sm{font-family:var(--m);font-size:10px;color:var(--td);margin-top:2px}
-.sa{font-family:var(--m);font-size:12px;color:var(--p);font-weight:600}
-.sf2{font-family:var(--m);font-size:11px;color:var(--a2)}
-.sbt{display:flex;gap:6px;margin-top:8px}
-.sb2{flex:1;padding:6px 0;border-radius:7px;font-family:var(--f);font-weight:600;font-size:12px;cursor:pointer;transition:all 0.12s}
-.sbl{background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.3);color:var(--p)}
-.sbe{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--a2)}
-.sbd{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--d)}
-#sm2{position:absolute;inset:0;z-index:2000;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;padding:16px}
-.mb{background:var(--card);border:1px solid var(--bb);border-radius:16px;padding:20px;width:100%;max-width:360px;box-shadow:var(--sh),var(--sg)}
-.mh{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.mhh{font-weight:700;font-size:18px;color:var(--p)}
-.mst{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.msc{background:rgba(0,212,170,0.06);border:1px solid var(--b);border-radius:10px;padding:8px 12px}
-.msl{font-family:var(--m);font-size:10px;color:var(--td);margin-bottom:2px}
-.msv{font-family:var(--m);font-size:13px;font-weight:700;color:var(--p)}
-.msv.go{color:var(--a2)}
-.fl{font-size:12px;font-weight:600;color:var(--td);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;display:block}
-.ni{width:100%;background:rgba(0,212,170,0.05);border:1px solid var(--bb);border-radius:10px;padding:10px 14px;color:var(--t);font-family:var(--f);font-size:15px;outline:none;margin-bottom:12px}
-.ni:focus{border-color:var(--p)}
-.pr2{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.pb3{flex:1;min-width:58px;padding:7px 4px;border-radius:8px;background:rgba(0,212,170,0.06);border:1px solid var(--b);color:var(--td);font-family:var(--f);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.12s}
-.pb3.ac{background:rgba(0,212,170,0.18);border-color:var(--p);color:var(--p)}
-.mbt{display:flex;gap:8px}
-.bcn{flex:1;padding:10px;background:transparent;border:1px solid var(--b);border-radius:10px;color:var(--td);font-family:var(--f);font-weight:600;font-size:14px;cursor:pointer}
-.bsv{flex:2;padding:10px;background:var(--p);border:none;border-radius:10px;color:var(--bg);font-family:var(--f);font-weight:700;font-size:14px;cursor:pointer}
-#hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,0.88);border:1px solid rgba(0,212,170,0.3);border-radius:10px;padding:10px 20px;color:rgba(232,244,240,0.7);font-family:var(--f);font-size:14px;pointer-events:none;z-index:900;white-space:nowrap}
-#zb{position:absolute;right:10px;bottom:90px;z-index:1000;display:flex;flex-direction:column;gap:4px}
-.zbt{width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--b);color:var(--t);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);line-height:1}
-.zbt:hover{border-color:var(--bb)}
-#gps-btn{position:absolute;right:10px;bottom:140px;z-index:1000;width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid rgba(0,212,170,0.4);color:var(--p);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh)}
-.sp{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,212,170,0.3);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+#ld{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-xl);
+  min-width:140px;display:none;z-index:2000;
+  backdrop-filter:blur(16px);animation:dropIn 0.15s ease;
+}
+.li{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;
+  cursor:pointer;font-size:13px;font-weight:500;
+  transition:background 0.1s;border-bottom:1px solid var(--border);
+}
+.li:last-child{border-bottom:none}
+.li:hover{background:rgba(255,255,255,0.05)}
+.li.active{color:var(--green);background:var(--green-dim)}
+
+/* RIGHT TOOLS */
+#tools{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px;z-index:1000;
+}
+.tb{
+  width:44px;height:44px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;box-shadow:var(--shadow);transition:all 0.15s;
+  font-family:var(--font);font-size:17px;
+  backdrop-filter:blur(8px);
+}
+.tb:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.tb:not(:disabled):hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25);color:var(--text)}
+.tb:not(:disabled):active{transform:scale(0.93)}
+.tb .tl{font-size:8px;letter-spacing:0.07em;font-weight:600;text-transform:uppercase}
+.tb.c-green{color:var(--green)}
+.tb.c-amber{color:var(--amber)}
+.tb.c-red{color:var(--red)}
+.tb.c-blue{color:var(--blue)}
+.tb.active{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.sep{height:1px;background:var(--border);margin:2px 0}
+
+/* BOTTOM LEFT PANEL */
+#mp{
+  position:absolute;bottom:20px;left:12px;z-index:1000;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:14px;padding:0;min-width:210px;
+  box-shadow:var(--shadow-xl);display:none;
+  backdrop-filter:blur(16px);overflow:hidden;
+}
+.mp-head{
+  padding:10px 14px 8px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04));
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.mp-title{font-weight:700;font-size:11px;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;flex:1}
+.mp-badge{
+  background:var(--green);color:#0f172a;
+  border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;
+  font-family:var(--mono);
+}
+.mp-body{padding:10px 14px 12px}
+.met{display:flex;justify-content:space-between;align-items:center;padding:3px 0;gap:12px}
+.met-l{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;flex-shrink:0}
+.met-v{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);text-align:right}
+.met-v.hero{font-size:16px;font-weight:700;color:var(--green)}
+.met-v.gold{font-size:14px;font-weight:700;color:var(--amber)}
+.mp-div{height:1px;background:var(--border);margin:6px 0}
+
+/* COORD DRAWER */
+#cd,#sd{
+  position:absolute;bottom:0;left:0;right:0;z-index:1100;
+  background:var(--surface2);border-top:1px solid var(--border2);
+  border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 32px rgba(0,0,0,0.6);
+  max-height:50vh;display:none;flex-direction:column;
+  backdrop-filter:blur(16px);
+}
+.drw-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+}
+.drw-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 12px;
+}
+.drw-title{font-weight:700;font-size:13px;letter-spacing:0.05em;text-transform:uppercase}
+.drw-close{
+  background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  color:var(--text2);cursor:pointer;font-size:14px;
+  width:26px;height:26px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+}
+.drw-body{overflow-y:auto;flex:1}
+.coord-head{
+  display:grid;grid-template-columns:32px 1fr 1fr;gap:8px;
+  padding:6px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.coord-hh{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase}
+.coord-row{
+  display:grid;grid-template-columns:32px 1fr 1fr;gap:8px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.1s;align-items:center;
+}
+.coord-row:hover{background:rgba(255,255,255,0.04)}
+.coord-row.sel{background:var(--green-dim)}
+.coord-badge{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--green);color:#0f172a;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;flex-shrink:0;
+}
+.coord-badge.sel{background:var(--amber)}
+.coord-val{font-family:var(--mono);font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drw-empty{padding:32px 16px;color:var(--text3);font-size:13px;text-align:center;line-height:1.7}
+
+/* SAVED LIST */
+.sv-item{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sv-name{font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px}
+.sv-meta{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.sv-area{font-family:var(--mono);font-size:13px;color:var(--green);font-weight:600}
+.sv-sqft{font-family:var(--mono);font-size:11px;color:var(--amber)}
+.sv-btns{display:flex;gap:6px;margin-top:10px}
+.sv-btn{
+  flex:1;padding:7px 0;border-radius:8px;
+  font-family:var(--font);font-weight:600;font-size:11px;
+  cursor:pointer;transition:all 0.12s;letter-spacing:0.03em;
+}
+.sv-load{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.sv-exp{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--amber)}
+.sv-del{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red)}
+
+/* SAVE MODAL */
+#modal-bg{
+  position:absolute;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.7);display:none;
+  align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(4px);
+  animation:fadeIn 0.15s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;padding:0;width:100%;max-width:480px;
+  box-shadow:var(--shadow-xl);overflow:hidden;
+  animation:slideUp 0.25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-head{
+  padding:20px 20px 16px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.03));
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.modal-title{font-weight:700;font-size:17px;color:var(--text)}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 20px 0}
+.stat-card{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+}
+.stat-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
+.stat-value{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green)}
+.stat-value.gold{color:var(--amber)}
+.modal-body{padding:16px 20px 20px}
+.form-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;display:block}
+.form-input{
+  width:100%;background:rgba(255,255,255,0.05);
+  border:1px solid var(--border2);border-radius:var(--r);
+  padding:11px 14px;color:var(--text);font-family:var(--font);
+  font-size:14px;outline:none;margin-bottom:14px;
+  transition:border-color 0.15s;
+}
+.form-input:focus{border-color:var(--green)}
+.form-input::placeholder{color:var(--text3)}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
+.type-btn{
+  padding:8px 4px;border-radius:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  color:var(--text3);font-family:var(--font);font-size:11px;font-weight:600;
+  cursor:pointer;text-align:center;transition:all 0.12s;
+}
+.type-btn.active{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.modal-actions{display:flex;gap:8px}
+.btn-cancel{
+  flex:1;padding:12px;background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text2);font-family:var(--font);font-weight:600;
+  font-size:14px;cursor:pointer;transition:all 0.15s;
+}
+.btn-cancel:hover{background:rgba(255,255,255,0.1)}
+.btn-save-final{
+  flex:2;padding:12px;background:var(--green);border:none;
+  border-radius:var(--r);color:#0f172a;font-family:var(--font);
+  font-weight:700;font-size:14px;cursor:pointer;
+  transition:all 0.15s;letter-spacing:0.02em;
+}
+.btn-save-final:hover{background:#059669;transform:translateY(-1px)}
+.btn-save-final:active{transform:translateY(0)}
+
+/* HINT */
+#hint{
+  position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:24px;padding:10px 20px;
+  color:var(--text2);font-size:13px;font-weight:500;
+  pointer-events:none;z-index:900;white-space:nowrap;
+  box-shadow:var(--shadow);backdrop-filter:blur(8px);
+}
+
+/* ZOOM + GPS BUTTONS */
+#map-controls{
+  position:absolute;right:12px;bottom:24px;z-index:1000;
+  display:flex;flex-direction:column;gap:6px;
+}
+.mc-btn{
+  width:36px;height:36px;border-radius:var(--r);
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow);transition:all 0.15s;
+  backdrop-filter:blur(8px);font-weight:300;line-height:1;
+}
+.mc-btn:hover{background:rgba(255,255,255,0.1)}
+.mc-btn:active{transform:scale(0.92)}
+.mc-btn.gps{color:var(--green);border-color:var(--green-border)}
+
+/* SPINNER */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(16,185,129,0.25);border-top-color:var(--green);border-radius:50%;animation:rot .6s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
 ::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-thumb{background:var(--bb);border-radius:2px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 </style>
 </head>
 <body>
 <div id="map"></div>
 
+<!-- TOP BAR -->
 <div id="topbar">
-  <button class="ib" id="menu-btn">
-    <svg width="18" height="14" viewBox="0 0 18 14"><rect y="0" width="18" height="2" rx="1" fill="currentColor"/><rect y="6" width="18" height="2" rx="1" fill="currentColor"/><rect y="12" width="18" height="2" rx="1" fill="currentColor"/></svg>
+  <button class="ib" id="menu-btn" title="Menu">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+      <rect width="16" height="2" rx="1"/><rect y="5" width="16" height="2" rx="1"/><rect y="10" width="16" height="2" rx="1"/>
+    </svg>
   </button>
   <div id="sw">
     <div id="sb">
       <span id="si-icon">🔍</span>
-      <input id="si" type="text" placeholder="H.no 219, Neki Ram Marg, Sector 7, Gurgaon..." autocomplete="off" autocorrect="off" spellcheck="false"/>
-      <button id="sc" style="display:none">×</button>
+      <input id="si" type="text" placeholder="Search: H.No 219, Neki Ram Marg, Sector 7, Gurgaon" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="search"/>
+      <button id="sc" style="display:none" aria-label="Clear">×</button>
     </div>
-    <div id="sr"></div>
+    <div id="sr" role="listbox"></div>
   </div>
   <div id="lw">
-    <button class="ib" id="lb">🗺️</button>
+    <button class="ib" id="lb" title="Map type">🗺️</button>
     <div id="ld">
-      <div class="li active" data-l="street">🗺️ Street</div>
-      <div class="li" data-l="satellite">🛰️ Satellite</div>
-      <div class="li" data-l="hybrid">🌍 Hybrid</div>
+      <div class="li active" data-l="street">🗺️&nbsp; Street</div>
+      <div class="li" data-l="satellite">🛰️&nbsp; Satellite</div>
+      <div class="li" data-l="hybrid">🌍&nbsp; Hybrid</div>
     </div>
   </div>
 </div>
 
+<!-- RIGHT TOOLS -->
 <div id="tools">
-  <button class="tb2 wn" id="bu" disabled><span>↩</span><span class="tl">UNDO</span></button>
-  <button class="tb2 dn" id="bd" disabled><span>🗑</span><span class="tl">DEL</span></button>
-  <button class="tb2 dn" id="bc" disabled><span>✕</span><span class="tl">CLEAR</span></button>
-  <div class="ts"></div>
-  <button class="tb2 pr" id="bsave" disabled><span>💾</span><span class="tl">SAVE</span></button>
-  <button class="tb2" id="bco"><span>📋</span><span class="tl">COORDS</span></button>
-  <button class="tb2 gd" id="bsd"><span>📁</span><span class="tl">SAVED</span></button>
+  <button class="tb c-amber" id="bu" disabled title="Undo last point"><span>↩</span><span class="tl">Undo</span></button>
+  <button class="tb c-red" id="bd" disabled title="Delete selected"><span>🗑</span><span class="tl">Del</span></button>
+  <button class="tb c-red" id="bc" disabled title="Clear all"><span>✕</span><span class="tl">Clear</span></button>
+  <div class="sep"></div>
+  <button class="tb c-green" id="bsave" disabled title="Save"><span>💾</span><span class="tl">Save</span></button>
+  <button class="tb" id="bco" title="Coordinates"><span>📋</span><span class="tl">Coords</span></button>
+  <button class="tb c-amber" id="bsd" title="Saved"><span>📁</span><span class="tl">Saved</span></button>
 </div>
 
-<div id="zb">
-  <button class="zbt" id="bzi">+</button>
-  <button class="zbt" id="bzo">−</button>
-</div>
-<button id="gps-btn" title="My Location">📍</button>
-
+<!-- MEASUREMENT PANEL -->
 <div id="mp">
-  <div class="mph"><span style="color:var(--p);font-size:14px">◈</span><span class="mpt">Live Measurement</span><span class="mpb" id="mp-pts">0 pts</span></div>
-  <div class="mt"><span class="ml">SQ. FEET</span><span class="mv sf" id="mp-sf">—</span></div>
-  <div class="mt"><span class="ml">AREA (m²)</span><span class="mv big" id="mp-a">—</span></div>
-  <div class="mt"><span class="ml">ACRES</span><span class="mv" id="mp-ac">—</span></div>
-  <div class="mt"><span class="ml">HECTARES</span><span class="mv" id="mp-ha">—</span></div>
-  <div class="mt"><span class="ml">GUNTA</span><span class="mv" id="mp-gu">—</span></div>
-  <div class="msp"></div>
-  <div class="mt"><span class="ml">PERIMETER</span><span class="mv" id="mp-pe">—</span></div>
+  <div class="mp-head">
+    <span style="font-size:14px">◈</span>
+    <span class="mp-title">Measurement</span>
+    <span class="mp-badge" id="mp-pts">0 pts</span>
+  </div>
+  <div class="mp-body">
+    <div class="met"><span class="met-l">Sq. Feet</span><span class="met-v gold" id="mp-sf">—</span></div>
+    <div class="met"><span class="met-l">Area</span><span class="met-v hero" id="mp-a">—</span></div>
+    <div class="met"><span class="met-l">Acres</span><span class="met-v" id="mp-ac">—</span></div>
+    <div class="met"><span class="met-l">Hectares</span><span class="met-v" id="mp-ha">—</span></div>
+    <div class="met"><span class="met-l">Gunta</span><span class="met-v" id="mp-gu">—</span></div>
+    <div class="mp-div"></div>
+    <div class="met"><span class="met-l">Perimeter</span><span class="met-v" id="mp-pe">—</span></div>
+  </div>
 </div>
 
-<div id="hint">📍 Tap the map to add boundary points</div>
+<div id="hint">📍 Tap on the map to add boundary points</div>
 
+<!-- COORD DRAWER -->
 <div id="cd">
-  <div class="dh">
-    <div style="display:flex;align-items:center;gap:8px"><span>📍</span><span class="dt" style="color:var(--p)">Coordinates</span><span class="mpb" id="cd-n" style="background:rgba(0,212,170,0.15);color:var(--p)">0</span></div>
-    <button class="dc" id="cc">×</button>
+  <div style="padding:8px 0 0">
+    <div class="drw-handle"></div>
   </div>
-  <div class="ch2"><span class="chh">#</span><span class="chh">LATITUDE</span><span class="chh">LONGITUDE</span></div>
-  <div class="db" id="cl"></div>
+  <div class="drw-head">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">📍</span>
+      <span class="drw-title" style="color:var(--green)">Boundary Points</span>
+      <span class="mp-badge" id="cd-n">0</span>
+    </div>
+    <button class="drw-close" id="cc">×</button>
+  </div>
+  <div class="coord-head">
+    <span class="coord-hh">#</span>
+    <span class="coord-hh">Latitude</span>
+    <span class="coord-hh">Longitude</span>
+  </div>
+  <div class="drw-body" id="cl"></div>
 </div>
 
+<!-- SAVED DRAWER -->
 <div id="sd">
-  <div class="dh">
-    <div style="display:flex;align-items:center;gap:8px"><span>📁</span><span class="dt" style="color:var(--a2)">Saved</span><span id="sd-n" style="background:rgba(255,215,0,0.12);color:var(--a2);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;font-family:var(--m)">0</span></div>
-    <button class="dc" id="cs">×</button>
+  <div style="padding:8px 0 0"><div class="drw-handle"></div></div>
+  <div class="drw-head">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">📁</span>
+      <span class="drw-title" style="color:var(--amber)">Saved Measurements</span>
+      <span id="sd-n" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.25);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;font-family:var(--mono)">0</span>
+    </div>
+    <button class="drw-close" id="cs">×</button>
   </div>
-  <div class="db" id="sl"></div>
+  <div class="drw-body" id="sl"></div>
 </div>
 
-<div id="sm2">
-  <div class="mb">
-    <div class="mh"><span style="font-size:20px">💾</span><span class="mhh">Save Measurement</span></div>
-    <div class="mst">
-      <div class="msc"><div class="msl">AREA</div><div class="msv" id="mo-a">—</div></div>
-      <div class="msc"><div class="msl">SQ. FEET</div><div class="msv go" id="mo-sf">—</div></div>
-      <div class="msc"><div class="msl">ACRES</div><div class="msv" id="mo-ac" style="color:var(--t)">—</div></div>
-      <div class="msc"><div class="msl">PERIMETER</div><div class="msv" id="mo-pe" style="color:var(--t)">—</div></div>
+<!-- SAVE MODAL -->
+<div id="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <span style="font-size:22px">💾</span>
+      <span class="modal-title">Save Measurement</span>
     </div>
-    <label class="fl">Property Name / Address</label>
-    <input class="ni" id="mn" type="text" placeholder="e.g. H.No 219, Neki Ram Marg, Sector 7"/>
-    <label class="fl">Property Type</label>
-    <div class="pr2">
-      <button class="pb3 ac" data-t="Plot">🏗 Plot</button>
-      <button class="pb3" data-t="House">🏠 House</button>
-      <button class="pb3" data-t="Factory">🏭 Factory</button>
-      <button class="pb3" data-t="Land">🌾 Land</button>
-      <button class="pb3" data-t="Field">🌿 Field</button>
-      <button class="pb3" data-t="Other">📌 Other</button>
+    <div class="modal-stats">
+      <div class="stat-card"><div class="stat-label">Area</div><div class="stat-value" id="mo-a">—</div></div>
+      <div class="stat-card"><div class="stat-label">Sq. Feet</div><div class="stat-value gold" id="mo-sf">—</div></div>
+      <div class="stat-card"><div class="stat-label">Acres</div><div class="stat-value" style="color:var(--text)" id="mo-ac">—</div></div>
+      <div class="stat-card"><div class="stat-label">Perimeter</div><div class="stat-value" style="color:var(--text)" id="mo-pe">—</div></div>
     </div>
-    <div class="mbt">
-      <button class="bcn" id="cnc">Cancel</button>
-      <button class="bsv" id="csv">Save Measurement</button>
+    <div class="modal-body">
+      <label class="form-label">Property Name / Address</label>
+      <input class="form-input" id="mn" type="text" placeholder="e.g. H.No 219, Neki Ram Marg, Sector 7, Gurgaon"/>
+      <label class="form-label">Property Type</label>
+      <div class="type-grid">
+        <button class="type-btn active" data-t="Plot">🏗 Plot</button>
+        <button class="type-btn" data-t="House">🏠 House</button>
+        <button class="type-btn" data-t="Factory">🏭 Factory</button>
+        <button class="type-btn" data-t="Land">🌾 Land</button>
+        <button class="type-btn" data-t="Field">🌿 Field</button>
+        <button class="type-btn" data-t="Other">📌 Other</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="cnc">Cancel</button>
+        <button class="btn-save-final" id="csv">Save Measurement</button>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- MAP CONTROLS -->
+<div id="map-controls">
+  <button class="mc-btn gps" id="gps-btn" title="My Location">📍</button>
+  <button class="mc-btn" id="bzi" title="Zoom in" style="font-size:22px;font-weight:300">+</button>
+  <button class="mc-btn" id="bzo" title="Zoom out" style="font-size:22px;font-weight:300">−</button>
 </div>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────────────
-// Google Geocoding API only (NOT Maps JS API - no popup error)
-// Leaflet handles the map - completely free & no API restrictions
-const GK='AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY';
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+const GK = 'AIzaSyBaRS2iSFFPCuyzbmQITu_WfL_uwLQ65WY';
 
-// ── STATE ──────────────────────────────────────────────────
-let pts=[],selId=null,coOpen=false,svOpen=false,pty='Plot',dt=null;
-let meas=[];try{meas=JSON.parse(localStorage.getItem('glmp6')||'[]')}catch(e){}
-let map,bTile,lTile;
-const mkMap=new Map();
-let poly=null,pline=null;
-const dls=[],als=[];
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let pts=[], selId=null, coOpen=false, svOpen=false, pty='Plot', debounce=null;
+let meas=[];
+try { meas = JSON.parse(localStorage.getItem('glmp7') || '[]'); } catch(e) {}
+let map, bTile, lTile;
+const mkMap = new Map();
+let poly=null, pline=null;
+const dls=[], als=[];
 
-// ── LEAFLET MAP (free, no API key needed) ──────────────────
-function initMap(){
-  map=L.map('map',{center:[28.4595,77.0266],zoom:15,zoomControl:false});
-  bTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors',maxZoom:21
-  }).addTo(map);
-  map.on('click',e=>addPt(e.latlng.lat,e.latlng.lng));
+// ═══════════════════════════════════════════════════
+//  MAP — Leaflet + OpenStreetMap (FREE, no API key)
+// ═══════════════════════════════════════════════════
+function initMap() {
+  map = L.map('map', {
+    center: [28.4595, 77.0266],
+    zoom: 15,
+    zoomControl: false,
+    preferCanvas: true
+  });
+  setTile('street');
+  map.on('click', e => addPt(e.latlng.lat, e.latlng.lng));
 }
 
-// ── LAYERS ─────────────────────────────────────────────────
-const TL={
-  street:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  satellite:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const TILES = {
+  street: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© OpenStreetMap'
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© Esri'
+  }
 };
-function setLayer(l){
-  if(bTile)map.removeLayer(bTile);
-  if(lTile){map.removeLayer(lTile);lTile=null;}
-  bTile=L.tileLayer(TL[l==='hybrid'?'satellite':l],{maxZoom:21}).addTo(map);
-  if(l==='hybrid'){lTile=L.tileLayer(TL.street,{opacity:0.4,maxZoom:21}).addTo(map);}
-  document.querySelectorAll('.li').forEach(e=>e.classList.toggle('active',e.dataset.l===l));
-  document.getElementById('lb').textContent={street:'🗺️',satellite:'🛰️',hybrid:'🌍'}[l];
-  document.getElementById('ld').style.display='none';
-}
-document.getElementById('lb').addEventListener('click',e=>{
-  e.stopPropagation();
-  const d=document.getElementById('ld');
-  d.style.display=d.style.display==='block'?'none':'block';
-});
-document.querySelectorAll('.li').forEach(e=>e.addEventListener('click',()=>setLayer(e.dataset.l)));
-document.getElementById('bzi').addEventListener('click',()=>map.zoomIn());
-document.getElementById('bzo').addEventListener('click',()=>map.zoomOut());
 
-// ── GPS MY LOCATION ────────────────────────────────────────
-document.getElementById('gps-btn').addEventListener('click',()=>{
-  const btn=document.getElementById('gps-btn');
-  btn.innerHTML='<span class="sp"></span>';
+function setTile(name) {
+  if (bTile) map.removeLayer(bTile);
+  if (lTile) { map.removeLayer(lTile); lTile = null; }
+  const t = TILES[name === 'hybrid' ? 'satellite' : name];
+  bTile = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 21 }).addTo(map);
+  if (name === 'hybrid') {
+    lTile = L.tileLayer(TILES.street.url, { opacity: 0.35, maxZoom: 21 }).addTo(map);
+  }
+}
+
+function setLayer(l) {
+  setTile(l);
+  document.querySelectorAll('.li').forEach(e => e.classList.toggle('active', e.dataset.l === l));
+  document.getElementById('lb').textContent = {street:'🗺️', satellite:'🛰️', hybrid:'🌍'}[l];
+  document.getElementById('ld').style.display = 'none';
+}
+
+document.getElementById('lb').addEventListener('click', e => {
+  e.stopPropagation();
+  const d = document.getElementById('ld');
+  d.style.display = d.style.display === 'block' ? 'none' : 'block';
+});
+document.querySelectorAll('.li').forEach(e => e.addEventListener('click', () => setLayer(e.dataset.l)));
+
+// Zoom + GPS
+document.getElementById('bzi').addEventListener('click', () => map.zoomIn());
+document.getElementById('bzo').addEventListener('click', () => map.zoomOut());
+document.getElementById('gps-btn').addEventListener('click', () => {
+  const btn = document.getElementById('gps-btn');
+  btn.innerHTML = '<span class="spin"></span>';
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      btn.textContent='📍';
-      map.flyTo([pos.coords.latitude,pos.coords.longitude],18,{duration:1.0});
-    },
-    ()=>{btn.textContent='📍';alert('Location denied. Please allow GPS access.');},
-    {enableHighAccuracy:true,timeout:10000}
+    p => { btn.textContent = '📍'; map.flyTo([p.coords.latitude, p.coords.longitude], 18); },
+    () => { btn.textContent = '📍'; },
+    { enableHighAccuracy: true, timeout: 10000 }
   );
 });
 
-// ── GOOGLE GEOCODING SEARCH (REST API - no Maps JS popup) ──
-const inp=document.getElementById('si');
-const res=document.getElementById('sr');
-const ico=document.getElementById('si-icon');
-const clr=document.getElementById('sc');
+// ═══════════════════════════════════════════════════
+//  SEARCH — Google Geocoding REST (no Maps JS needed)
+// ═══════════════════════════════════════════════════
+const inp = document.getElementById('si');
+const resCont = document.getElementById('sr');
+const ico = document.getElementById('si-icon');
+const clrBtn = document.getElementById('sc');
 
-inp.addEventListener('input',()=>{
-  const q=inp.value.trim();
-  clr.style.display=q?'block':'none';
-  if(dt)clearTimeout(dt);
-  if(!q){res.style.display='none';return;}
-  dt=setTimeout(()=>search(q),350);
+inp.addEventListener('input', () => {
+  const q = inp.value.trim();
+  clrBtn.style.display = q ? 'block' : 'none';
+  if (debounce) clearTimeout(debounce);
+  if (!q) { resCont.style.display = 'none'; return; }
+  debounce = setTimeout(() => doSearch(q), 300);
 });
-inp.addEventListener('keydown',e=>{
-  if(e.key==='Enter')search(inp.value.trim());
-  if(e.key==='Escape')res.style.display='none';
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch(inp.value.trim());
+  if (e.key === 'Escape') { resCont.style.display = 'none'; inp.blur(); }
 });
-clr.addEventListener('click',()=>{inp.value='';res.style.display='none';clr.style.display='none';});
+clrBtn.addEventListener('click', () => {
+  inp.value = ''; resCont.style.display = 'none'; clrBtn.style.display = 'none';
+});
 
-async function search(q){
-  if(!q)return;
+async function doSearch(q) {
+  if (!q) return;
 
-  // Direct coordinate input: "28.45, 77.03"
-  const cm=q.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
-  if(cm){
-    const la=parseFloat(cm[1]),ln=parseFloat(cm[2]);
-    if(la>=-90&&la<=90&&ln>=-180&&ln<=180){
-      showRes([{la,ln,main:`📍 ${la.toFixed(6)}, ${ln.toFixed(6)}`,sec:'Go to coordinates',src:'c'}]);
+  // Coordinate shortcut: "28.45, 77.03"
+  const cm = q.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (cm) {
+    const la = parseFloat(cm[1]), ln = parseFloat(cm[2]);
+    if (la >= -90 && la <= 90 && ln >= -180 && ln <= 180) {
+      showRes([{ la, ln, main: `${la.toFixed(6)}, ${ln.toFixed(6)}`, sec: 'Go to coordinates', src: 'c', icon: '📍' }]);
       return;
     }
   }
 
-  ico.innerHTML='<span class="sp"></span>';
+  ico.innerHTML = '<span class="spin"></span>';
 
-  // Use Google Geocoding REST API + Photon in parallel
-  // Google Geocoding API does NOT require Maps JS API - just the key
-  const [gRes,pRes]=await Promise.allSettled([
+  // Run Google Geocoding + Photon in parallel for maximum coverage
+  const [gR, pR] = await Promise.allSettled([
     googleGeocode(q),
     photonSearch(q)
   ]);
 
-  ico.textContent='🔍';
+  ico.textContent = '🔍';
 
-  const results=[];
-  const seen=new Set();
-  const add=(r)=>{
-    const k=`${parseFloat(r.la).toFixed(3)},${parseFloat(r.ln).toFixed(3)}`;
-    if(!seen.has(k)){seen.add(k);results.push(r);}
+  const out = [];
+  const seen = new Set();
+  const add = r => {
+    if (!r.la || !r.ln) return;
+    const k = `${(+r.la).toFixed(3)},${(+r.ln).toFixed(3)}`;
+    if (!seen.has(k)) { seen.add(k); out.push(r); }
   };
 
-  if(gRes.status==='fulfilled')gRes.value.forEach(add);
-  if(pRes.status==='fulfilled')pRes.value.forEach(add);
+  if (gR.status === 'fulfilled') gR.value.forEach(add);
+  if (pR.status === 'fulfilled') pR.value.forEach(add);
 
-  showRes(results,q);
+  showRes(out, q);
 }
 
-async function googleGeocode(q){
-  // Google Geocoding REST API - works with just API key, NO Maps JS needed
-  // This is what Google Maps itself uses for address search
-  const queries=[
-    q+', India',
-    q.replace(/^h\.?no\.?\s*/i,'House No '),
-    q.replace(/^plot\s*/i,'Plot No ')
+async function googleGeocode(q) {
+  // Smart query variants to catch different address formats
+  const variants = [
+    q + ', India',
+    q.replace(/^h\.?\s*no\.?\s*/i, 'House Number ') + ', India',
+    q.replace(/^plot\s*/i, 'Plot Number ') + ', India',
+    q.replace(/^kh\.?\s*/i, 'Khasra ') + ', India',
   ];
 
-  for(const qq of queries){
-    try{
-      const url=`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(qq)}&region=in&language=en&key=${GK}`;
-      const r=await fetch(url);
-      const d=await r.json();
-      if(d.status==='OK'&&d.results&&d.results.length){
-        return d.results.slice(0,5).map(r=>{
-          const parts=r.formatted_address.split(',');
-          return{
-            la:r.geometry.location.lat,
-            ln:r.geometry.location.lng,
-            main:parts[0].trim(),
-            sec:parts.slice(1,4).join(',').trim(),
-            src:'g'
+  for (const variant of variants) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(variant)}&region=in&language=en&key=${GK}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      if (d.status === 'OK' && d.results?.length) {
+        return d.results.slice(0, 5).map(r => {
+          const parts = r.formatted_address.split(',');
+          const type = r.types?.[0] || '';
+          return {
+            la: r.geometry.location.lat,
+            ln: r.geometry.location.lng,
+            main: parts[0].trim(),
+            sec: parts.slice(1, 4).join(',').trim(),
+            src: 'g',
+            icon: typeIcon(type)
           };
         });
       }
-      if(d.status==='REQUEST_DENIED'||d.status==='INVALID_REQUEST')return[];
-    }catch(e){}
+      if (d.status === 'ZERO_RESULTS') continue;
+      if (d.status === 'REQUEST_DENIED' || d.status === 'OVER_DAILY_LIMIT') return [];
+    } catch(e) { continue; }
   }
-  return[];
+  return [];
 }
 
-async function photonSearch(q){
-  try{
-    const url=`https://photon.komoot.io/api/?q=${encodeURIComponent(q+' India')}&limit=4&lang=en`;
-    const r=await fetch(url);
-    const d=await r.json();
-    return(d.features||[]).map(f=>{
-      const p=f.properties;
-      const main=[p.housenumber,p.name,p.street].filter(Boolean).join(' ')||p.city||'';
-      const sec=[p.district,p.city,p.state].filter(Boolean).join(', ');
-      return{la:f.geometry.coordinates[1],ln:f.geometry.coordinates[0],main,sec,src:'o'};
-    }).filter(r=>r.main);
-  }catch(e){return[];}
+async function photonSearch(q) {
+  try {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q + ' India')}&limit=3&lang=en`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    return (d.features || []).map(f => {
+      const p = f.properties;
+      const main = [p.housenumber, p.name, p.street].filter(Boolean).join(' ') || p.city || '';
+      const sec = [p.district, p.city, p.state].filter(Boolean).join(', ');
+      return {
+        la: f.geometry.coordinates[1], ln: f.geometry.coordinates[0],
+        main, sec, src: 'o',
+        icon: p.type === 'house' ? '🏠' : p.type === 'street' ? '🛣️' : '📍'
+      };
+    }).filter(r => r.main.trim());
+  } catch(e) { return []; }
 }
 
-function showRes(results,q){
-  if(!results||!results.length){
-    res.innerHTML=`
-      <div class="r-none">No results found</div>
+function typeIcon(t) {
+  const m = {
+    street_address:'🏠', premise:'🏢', subpremise:'🏢',
+    establishment:'🏢', route:'🛣️', political:'📍',
+    neighborhood:'📍', locality:'🏙️', natural_feature:'🌿'
+  };
+  return m[t] || '📍';
+}
+
+function showRes(results, q) {
+  if (!results || !results.length) {
+    resCont.innerHTML = `
+      <div class="r-empty">No results for "${escH(q || '')}"</div>
       <div class="r-tip">
-        💡 Try more specific address:<br>
-        • "H.No 219, Neki Ram Marg, Sector 7, Gurgaon"<br>
-        • "Plot 47, Sector 9, Gurugram, Haryana"<br>
-        • "Khasra 456, Village Bajghera, Gurugram"<br>
-        • Or paste coordinates: "28.4595, 77.0266"
+        <strong>Try a more complete address:</strong><br>
+        • H.No 219, Neki Ram Marg, Sector 7, Gurgaon, Haryana<br>
+        • Plot No 47, Sector 9, Gurugram, Haryana 122001<br>
+        • Industrial Area Phase 2, Ludhiana, Punjab<br>
+        • Khasra 456, Village Bajghera, Gurugram<br>
+        • Or type coordinates: 28.4595, 77.0266
       </div>`;
-    res.style.display='block';
+    resCont.style.display = 'block';
     return;
   }
-  res.innerHTML=results.map((r,i)=>`
-    <div class="ri" data-i="${i}">
-      <div class="r-main">${escH(r.main)}</div>
-      ${r.sec?`<div class="r-sec">${escH(r.sec)}</div>`:''}
-      <span class="r-badge ${r.src==='c'?'bc':r.src==='g'?'bg':''}">
-        ${r.src==='c'?'COORDS':r.src==='g'?'GOOGLE':'OSM'}
-      </span>
-    </div>`).join('');
-  res.style.display='block';
-  res.querySelectorAll('.ri').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const r=results[parseInt(el.dataset.i)];
-      map.flyTo([r.la,r.ln],19,{duration:1.0});
-      inp.value=r.main;
-      res.style.display='none';
+
+  const gResults = results.filter(r => r.src === 'g');
+  const oResults = results.filter(r => r.src === 'o');
+  const cResults = results.filter(r => r.src === 'c');
+
+  let html = '';
+  if (cResults.length) {
+    cResults.forEach((r, i) => { html += riHTML(r, results.indexOf(r)); });
+  }
+  if (gResults.length) {
+    html += `<div class="r-section">Google Results</div>`;
+    gResults.forEach(r => { html += riHTML(r, results.indexOf(r)); });
+  }
+  if (oResults.length) {
+    html += `<div class="r-section">OpenStreetMap</div>`;
+    oResults.forEach(r => { html += riHTML(r, results.indexOf(r)); });
+  }
+
+  resCont.innerHTML = html;
+  resCont.style.display = 'block';
+
+  resCont.querySelectorAll('.ri').forEach(el => {
+    el.addEventListener('click', () => {
+      const r = results[parseInt(el.dataset.i)];
+      map.flyTo([r.la, r.ln], 19, { duration: 0.8, easeLinearity: 0.5 });
+      inp.value = r.main;
+      resCont.style.display = 'none';
+      clrBtn.style.display = 'block';
     });
   });
 }
 
-// ── POINTS ─────────────────────────────────────────────────
-function uid(){return Math.random().toString(36).slice(2,10);}
-function addPt(la,ln){pts.push({id:uid(),lat:la,lng:ln,label:pts.length+1});selId=null;renderAll();}
+function riHTML(r, i) {
+  const badge = r.src === 'c' ? 'bg-c' : r.src === 'g' ? 'bg-g' : 'bg-o';
+  const label = r.src === 'c' ? 'COORDS' : r.src === 'g' ? 'GOOGLE' : 'OSM';
+  return `<div class="ri" data-i="${i}" role="option">
+    <span class="ri-icon">${r.icon || '📍'}</span>
+    <div class="ri-body">
+      <div class="r-main">${escH(r.main)}</div>
+      ${r.sec ? `<div class="r-sec">${escH(r.sec)}</div>` : ''}
+      <span class="r-badge ${badge}">${label}</span>
+    </div>
+  </div>`;
+}
 
-document.getElementById('bu').addEventListener('click',()=>{
-  if(!pts.length)return;const r=pts.pop();const m=mkMap.get(r.id);
-  if(m){map.removeLayer(m);mkMap.delete(r.id);}selId=null;renderAll();
-});
-document.getElementById('bd').addEventListener('click',()=>{
-  if(!selId)return;const m=mkMap.get(selId);if(m){map.removeLayer(m);mkMap.delete(selId);}
-  pts=pts.filter(p=>p.id!==selId).map((p,i)=>({...p,label:i+1}));selId=null;renderAll();
-});
-document.getElementById('bc').addEventListener('click',()=>{
-  pts=[];selId=null;mkMap.forEach(m=>map.removeLayer(m));mkMap.clear();renderAll();
-});
-function selPt(id){selId=selId===id?null:id;renderAll();}
-function renderAll(){rMk();rPoly();rDist();rAng();updUI();}
+// ═══════════════════════════════════════════════════
+//  POINT MANAGEMENT
+// ═══════════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
-function rMk(){
-  const cur=new Set(pts.map(p=>p.id));
-  [...mkMap.keys()].forEach(id=>{if(!cur.has(id)){map.removeLayer(mkMap.get(id));mkMap.delete(id);}});
-  pts.forEach(p=>{
-    const s=p.id===selId;
-    const ic=L.divIcon({className:'',html:`<div class="mm${s?' sel':''}">${p.label}</div>`,iconSize:[28,28],iconAnchor:[14,14]});
-    if(mkMap.has(p.id)){mkMap.get(p.id).setLatLng([p.lat,p.lng]).setIcon(ic);}
-    else{
-      const mk=L.marker([p.lat,p.lng],{icon:ic,zIndexOffset:1000}).addTo(map);
-      mk.on('click',e=>{L.DomEvent.stopPropagation(e);selPt(p.id);});
-      mkMap.set(p.id,mk);
+function addPt(la, ln) {
+  pts.push({ id: uid(), lat: la, lng: ln, label: pts.length + 1 });
+  selId = null;
+  renderAll();
+}
+
+document.getElementById('bu').addEventListener('click', () => {
+  if (!pts.length) return;
+  const r = pts.pop();
+  const m = mkMap.get(r.id);
+  if (m) { map.removeLayer(m); mkMap.delete(r.id); }
+  selId = null; renderAll();
+});
+document.getElementById('bd').addEventListener('click', () => {
+  if (!selId) return;
+  const m = mkMap.get(selId);
+  if (m) { map.removeLayer(m); mkMap.delete(selId); }
+  pts = pts.filter(p => p.id !== selId).map((p, i) => ({ ...p, label: i + 1 }));
+  selId = null; renderAll();
+});
+document.getElementById('bc').addEventListener('click', () => {
+  pts = []; selId = null;
+  mkMap.forEach(m => map.removeLayer(m)); mkMap.clear();
+  renderAll();
+});
+
+function selPt(id) { selId = selId === id ? null : id; renderAll(); }
+function renderAll() { rMk(); rPoly(); rDist(); rAng(); updUI(); }
+
+function rMk() {
+  const cur = new Set(pts.map(p => p.id));
+  [...mkMap.keys()].forEach(id => {
+    if (!cur.has(id)) { map.removeLayer(mkMap.get(id)); mkMap.delete(id); }
+  });
+  pts.forEach(p => {
+    const s = p.id === selId;
+    const ic = L.divIcon({
+      className: '',
+      html: `<div class="mk${s ? ' sel' : ''}">${p.label}</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 16]
+    });
+    if (mkMap.has(p.id)) {
+      mkMap.get(p.id).setLatLng([p.lat, p.lng]).setIcon(ic);
+    } else {
+      const mk = L.marker([p.lat, p.lng], { icon: ic, zIndexOffset: 1000 }).addTo(map);
+      mk.on('click', e => { L.DomEvent.stopPropagation(e); selPt(p.id); });
+      mkMap.set(p.id, mk);
     }
   });
 }
-function rPoly(){
-  if(poly){map.removeLayer(poly);poly=null;}
-  if(pline){map.removeLayer(pline);pline=null;}
-  if(pts.length>=3){poly=L.polygon(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,opacity:.9,fillColor:'#00d4aa',fillOpacity:.1}).addTo(map);}
-  else if(pts.length===2){pline=L.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#00d4aa',weight:2.5,dashArray:'6 4'}).addTo(map);}
+
+function rPoly() {
+  if (poly) { map.removeLayer(poly); poly = null; }
+  if (pline) { map.removeLayer(pline); pline = null; }
+  if (pts.length >= 3) {
+    poly = L.polygon(pts.map(p => [p.lat, p.lng]), {
+      color: '#10b981', weight: 2, opacity: 0.9,
+      fillColor: '#10b981', fillOpacity: 0.08
+    }).addTo(map);
+  } else if (pts.length === 2) {
+    pline = L.polyline(pts.map(p => [p.lat, p.lng]), {
+      color: '#10b981', weight: 2, dashArray: '8 5', opacity: 0.85
+    }).addTo(map);
+  }
 }
 
-// ── GEOMETRY ───────────────────────────────────────────────
-function hav(a,b,c,d){const R=6371000,r=Math.PI/180,dl=(c-a)*r,dn=(d-b)*r,x=Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-function rDist(){
-  dls.forEach(l=>map.removeLayer(l));dls.length=0;
-  if(pts.length<2)return;const n=pts.length,c=n>=3?n:n-1;
-  for(let i=0;i<c;i++){
-    const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;
-    dls.push(L.marker([(a.lat+b.lat)/2,(a.lng+b.lng)/2],{
-      icon:L.divIcon({className:'dist-lbl',html:fD(hav(a.lat,a.lng,b.lat,b.lng)),iconAnchor:[20,10]}),
-      interactive:false,zIndexOffset:500
+// ═══════════════════════════════════════════════════
+//  GEOMETRY
+// ═══════════════════════════════════════════════════
+function hav(a, b, c, d) {
+  const R = 6371000, r = Math.PI / 180;
+  const dl = (c - a) * r, dn = (d - b) * r;
+  const x = Math.sin(dl/2)**2 + Math.cos(a*r) * Math.cos(c*r) * Math.sin(dn/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+function rDist() {
+  dls.forEach(l => map.removeLayer(l)); dls.length = 0;
+  if (pts.length < 2) return;
+  const n = pts.length, c = n >= 3 ? n : n - 1;
+  for (let i = 0; i < c; i++) {
+    const a = pts[i], b = pts[(i+1) % n];
+    if (i === n-1 && n < 3) break;
+    const d = hav(a.lat, a.lng, b.lat, b.lng);
+    dls.push(L.marker(
+      [(a.lat+b.lat)/2, (a.lng+b.lng)/2],
+      { icon: L.divIcon({ className:'dl', html: fD(d), iconAnchor:[24,10] }), interactive:false, zIndexOffset:500 }
+    ).addTo(map));
+  }
+}
+
+function rAng() {
+  als.forEach(l => map.removeLayer(l)); als.length = 0;
+  if (pts.length < 3) return;
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const pv = pts[(i-1+n)%n], cu = pts[i], nx = pts[(i+1)%n];
+    const v1 = { x: pv.lng-cu.lng, y: pv.lat-cu.lat };
+    const v2 = { x: nx.lng-cu.lng, y: nx.lat-cu.lat };
+    const dot = v1.x*v2.x + v1.y*v2.y;
+    const mg = Math.sqrt((v1.x**2+v1.y**2) * (v2.x**2+v2.y**2));
+    if (!mg) continue;
+    const ang = Math.round(Math.acos(Math.max(-1, Math.min(1, dot/mg))) * 1800) / 10;
+    als.push(L.marker([cu.lat, cu.lng], {
+      icon: L.divIcon({ className:'al', html:`${ang}°`, iconAnchor:[-8, 24] }),
+      interactive: false, zIndexOffset: 400
     }).addTo(map));
   }
 }
-function rAng(){
-  als.forEach(l=>map.removeLayer(l));als.length=0;
-  if(pts.length<3)return;const n=pts.length;
-  for(let i=0;i<n;i++){
-    const pv=pts[(i-1+n)%n],cu=pts[i],nx=pts[(i+1)%n];
-    const v1={x:pv.lng-cu.lng,y:pv.lat-cu.lat},v2={x:nx.lng-cu.lng,y:nx.lat-cu.lat};
-    const dot=v1.x*v2.x+v1.y*v2.y,mg=Math.sqrt((v1.x**2+v1.y**2)*(v2.x**2+v2.y**2));
-    if(!mg)continue;
-    als.push(L.marker([cu.lat,cu.lng],{
-      icon:L.divIcon({className:'ang-lbl',html:`${Math.round(Math.acos(Math.max(-1,Math.min(1,dot/mg)))*1800)/10}°`,iconAnchor:[-6,22]}),
-      interactive:false,zIndexOffset:400
-    }).addTo(map));
+
+function cArea() {
+  if (pts.length < 3) return { a:0, ac:0, ha:0, sf:0, gu:0 };
+  try {
+    const c = [...pts.map(p => [p.lng, p.lat]), [pts[0].lng, pts[0].lat]];
+    const a = turf.area(turf.polygon([c]));
+    return { a, ac: a/4046.856, ha: a/10000, sf: a*10.7639, gu: a/101.17 };
+  } catch(e) { return { a:0, ac:0, ha:0, sf:0, gu:0 }; }
+}
+
+function cPerim() {
+  if (pts.length < 2) return 0;
+  let t = 0; const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const a = pts[i], b = pts[(i+1)%n];
+    if (i === n-1 && n < 3) break;
+    t += hav(a.lat, a.lng, b.lat, b.lng);
   }
-}
-function cArea(){
-  if(pts.length<3)return{a:0,ac:0,ha:0,sf:0,gu:0};
-  try{
-    const c=[...pts.map(p=>[p.lng,p.lat]),[pts[0].lng,pts[0].lat]];
-    const a=turf.area(turf.polygon([c]));
-    return{a,ac:a/4046.856,ha:a/10000,sf:a*10.7639,gu:a/101.17};
-  }catch(e){return{a:0,ac:0,ha:0,sf:0,gu:0};}
-}
-function cPerim(){
-  if(pts.length<2)return 0;let t=0;const n=pts.length;
-  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];if(i===n-1&&n<3)break;t+=hav(a.lat,a.lng,b.lat,b.lng);}
   return t;
 }
-function fD(m){return m>=1000?`${(m/1e3).toFixed(2)}km`:m>=1?`${m.toFixed(1)}m`:`${(m*100).toFixed(0)}cm`;}
-function fA(s){return s>=1e6?`${(s/1e6).toFixed(4)}km²`:s>=1e4?`${(s/1e4).toFixed(4)}ha`:`${s.toFixed(2)}m²`;}
-function fSF(f){return f>0?`${Math.round(f).toLocaleString()} sq ft`:'—';}
 
-// ── UI ─────────────────────────────────────────────────────
-function updUI(){
-  const n=pts.length,hp=n>0,hs=!!selId;
-  document.getElementById('bu').disabled=!hp;document.getElementById('bd').disabled=!hs;
-  document.getElementById('bc').disabled=!hp;document.getElementById('bsave').disabled=!hp;
-  document.getElementById('hint').style.display=hp?'none':'block';
-  const panel=document.getElementById('mp');
-  if(n>=2){
-    panel.style.display='block';
-    const{a,ac,ha,sf,gu}=cArea();const pe=cPerim();
-    document.getElementById('mp-pts').textContent=`${n} pts`;
-    document.getElementById('mp-sf').textContent=fSF(sf);
-    document.getElementById('mp-a').textContent=fA(a);
-    document.getElementById('mp-ac').textContent=`${ac.toFixed(4)} ac`;
-    document.getElementById('mp-ha').textContent=`${ha.toFixed(4)} ha`;
-    document.getElementById('mp-gu').textContent=`${gu.toFixed(3)} Gunta`;
-    document.getElementById('mp-pe').textContent=fD(pe);
-  }else panel.style.display='none';
-  if(coOpen)rCL();if(!hp&&coOpen)closeCO();
-}
-function rCL(){
-  document.getElementById('cd-n').textContent=pts.length;
-  const l=document.getElementById('cl');
-  if(!pts.length){l.innerHTML='<div class="em">No points yet</div>';return;}
-  l.innerHTML=pts.map(p=>`<div class="cr${p.id===selId?' sel':''}" data-id="${p.id}"><div class="pb${p.id===selId?' sel':''}">${p.label}</div><span class="cv">${p.lat.toFixed(7)}</span><span class="cv">${p.lng.toFixed(7)}</span></div>`).join('');
-  l.querySelectorAll('.cr').forEach(el=>el.addEventListener('click',()=>selPt(el.dataset.id)));
-}
-function togCO(){coOpen=!coOpen;if(svOpen)closeSV();document.getElementById('cd').style.display=coOpen?'flex':'none';document.getElementById('bco').classList.toggle('ac',coOpen);if(coOpen)rCL();}
-function closeCO(){coOpen=false;document.getElementById('cd').style.display='none';document.getElementById('bco').classList.remove('ac');}
-function togSV(){svOpen=!svOpen;if(coOpen)closeCO();document.getElementById('sd').style.display=svOpen?'flex':'none';document.getElementById('bsd').classList.toggle('ac',svOpen);if(svOpen)rSL();}
-function closeSV(){svOpen=false;document.getElementById('sd').style.display='none';document.getElementById('bsd').classList.remove('ac');}
-document.getElementById('bco').addEventListener('click',togCO);document.getElementById('bsd').addEventListener('click',togSV);
-document.getElementById('cc').addEventListener('click',closeCO);document.getElementById('cs').addEventListener('click',closeSV);
+function fD(m) { return m>=1000 ? `${(m/1e3).toFixed(2)}km` : m>=1 ? `${m.toFixed(1)}m` : `${(m*100).toFixed(0)}cm`; }
+function fA(s) { return s>=1e6 ? `${(s/1e6).toFixed(4)}km²` : s>=1e4 ? `${(s/1e4).toFixed(4)}ha` : `${s.toFixed(2)}m²`; }
+function fSF(f) { return f > 0 ? `${Math.round(f).toLocaleString()} sq ft` : '—'; }
 
-const TI=t=>({Plot:'🏗',House:'🏠',Factory:'🏭',Land:'🌾',Field:'🌿'}[t]||'📌');
-function rSL(){
-  const l=document.getElementById('sl');document.getElementById('sd-n').textContent=meas.length;
-  if(!meas.length){l.innerHTML='<div class="em">No saved measurements yet.<br><span style="opacity:0.6;font-size:11px">Tap 💾 after drawing a boundary</span></div>';return;}
-  l.innerHTML=[...meas].reverse().map(m=>`
-    <div class="si2">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div class="sn">${TI(m.pt)} ${escH(m.name)}</div><div class="sm">${new Date(m.ts).toLocaleDateString('en-IN')} · ${m.pts.length} pts · ${m.pt}</div></div>
-        <div style="text-align:right"><div class="sa">${fA(m.a)}</div><div class="sf2">${fSF(m.sf||m.a*10.7639)}</div></div>
+// ═══════════════════════════════════════════════════
+//  UI UPDATE
+// ═══════════════════════════════════════════════════
+function updUI() {
+  const n = pts.length, hp = n > 0, hs = !!selId;
+  document.getElementById('bu').disabled = !hp;
+  document.getElementById('bd').disabled = !hs;
+  document.getElementById('bc').disabled = !hp;
+  document.getElementById('bsave').disabled = !hp;
+  document.getElementById('hint').style.display = hp ? 'none' : 'block';
+
+  const panel = document.getElementById('mp');
+  if (n >= 2) {
+    panel.style.display = 'block';
+    const { a, ac, ha, sf, gu } = cArea();
+    const pe = cPerim();
+    document.getElementById('mp-pts').textContent = `${n} pts`;
+    document.getElementById('mp-sf').textContent = fSF(sf);
+    document.getElementById('mp-a').textContent = fA(a);
+    document.getElementById('mp-ac').textContent = `${ac.toFixed(4)} ac`;
+    document.getElementById('mp-ha').textContent = `${ha.toFixed(4)} ha`;
+    document.getElementById('mp-gu').textContent = `${gu.toFixed(3)} Gunta`;
+    document.getElementById('mp-pe').textContent = fD(pe);
+  } else panel.style.display = 'none';
+
+  if (coOpen) rCL();
+  if (!hp && coOpen) closeCO();
+}
+
+// Coord list
+function rCL() {
+  document.getElementById('cd-n').textContent = pts.length;
+  const l = document.getElementById('cl');
+  if (!pts.length) {
+    l.innerHTML = '<div class="drw-empty">No boundary points yet.<br>Tap the map to start marking.</div>';
+    return;
+  }
+  l.innerHTML = pts.map(p => `
+    <div class="coord-row${p.id===selId?' sel':''}" data-id="${p.id}">
+      <div class="coord-badge${p.id===selId?' sel':''}">${p.label}</div>
+      <span class="coord-val">${p.lat.toFixed(7)}</span>
+      <span class="coord-val">${p.lng.toFixed(7)}</span>
+    </div>`).join('');
+  l.querySelectorAll('.coord-row').forEach(el =>
+    el.addEventListener('click', () => selPt(el.dataset.id))
+  );
+}
+
+// ═══════════════════════════════════════════════════
+//  DRAWERS
+// ═══════════════════════════════════════════════════
+function togCO() {
+  coOpen = !coOpen;
+  if (svOpen) closeSV();
+  document.getElementById('cd').style.display = coOpen ? 'flex' : 'none';
+  document.getElementById('bco').classList.toggle('active', coOpen);
+  if (coOpen) rCL();
+}
+function closeCO() {
+  coOpen = false;
+  document.getElementById('cd').style.display = 'none';
+  document.getElementById('bco').classList.remove('active');
+}
+function togSV() {
+  svOpen = !svOpen;
+  if (coOpen) closeCO();
+  document.getElementById('sd').style.display = svOpen ? 'flex' : 'none';
+  document.getElementById('bsd').classList.toggle('active', svOpen);
+  if (svOpen) rSL();
+}
+function closeSV() {
+  svOpen = false;
+  document.getElementById('sd').style.display = 'none';
+  document.getElementById('bsd').classList.remove('active');
+}
+document.getElementById('bco').addEventListener('click', togCO);
+document.getElementById('bsd').addEventListener('click', togSV);
+document.getElementById('cc').addEventListener('click', closeCO);
+document.getElementById('cs').addEventListener('click', closeSV);
+
+const TI = t => ({Plot:'🏗',House:'🏠',Factory:'🏭',Land:'🌾',Field:'🌿'}[t] || '📌');
+
+function rSL() {
+  const l = document.getElementById('sl');
+  document.getElementById('sd-n').textContent = meas.length;
+  if (!meas.length) {
+    l.innerHTML = '<div class="drw-empty">No saved measurements.<br>Draw a boundary and tap 💾 Save.</div>';
+    return;
+  }
+  l.innerHTML = [...meas].reverse().map(m => `
+    <div class="sv-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="min-width:0">
+          <div class="sv-name">${TI(m.pt)} ${escH(m.name)}</div>
+          <div class="sv-meta">${new Date(m.ts).toLocaleDateString('en-IN')} · ${m.pts.length} pts · ${m.pt}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="sv-area">${fA(m.a)}</div>
+          <div class="sv-sqft">${fSF(m.sf||m.a*10.7639)}</div>
+        </div>
       </div>
-      <div class="sbt">
-        <button class="sb2 sbl" data-id="${m.id}">Load</button>
-        <button class="sb2 sbe" data-id="${m.id}">Export</button>
-        <button class="sb2 sbd" data-id="${m.id}">Delete</button>
+      <div class="sv-btns">
+        <button class="sv-btn sv-load" data-id="${m.id}">Load</button>
+        <button class="sv-btn sv-exp" data-id="${m.id}">Export</button>
+        <button class="sv-btn sv-del" data-id="${m.id}">Delete</button>
       </div>
     </div>`).join('');
-  l.querySelectorAll('.sbl').forEach(b=>b.addEventListener('click',()=>loadM(b.dataset.id)));
-  l.querySelectorAll('.sbe').forEach(b=>b.addEventListener('click',()=>expM(b.dataset.id)));
-  l.querySelectorAll('.sbd').forEach(b=>b.addEventListener('click',()=>{
-    meas=meas.filter(m=>m.id!==b.dataset.id);
-    try{localStorage.setItem('glmp6',JSON.stringify(meas));}catch(e){}
+  l.querySelectorAll('.sv-load').forEach(b => b.addEventListener('click', () => loadM(b.dataset.id)));
+  l.querySelectorAll('.sv-exp').forEach(b => b.addEventListener('click', () => expM(b.dataset.id)));
+  l.querySelectorAll('.sv-del').forEach(b => b.addEventListener('click', () => {
+    meas = meas.filter(m => m.id !== b.dataset.id);
+    try { localStorage.setItem('glmp7', JSON.stringify(meas)); } catch(e) {}
     rSL();
   }));
 }
 
-document.getElementById('bsave').addEventListener('click',()=>{
-  if(!pts.length)return;const{a,sf,ac}=cArea();const pe=cPerim();
-  document.getElementById('mo-a').textContent=fA(a);
-  document.getElementById('mo-sf').textContent=fSF(sf);
-  document.getElementById('mo-ac').textContent=`${ac.toFixed(4)} ac`;
-  document.getElementById('mo-pe').textContent=fD(pe);
-  document.getElementById('mn').value='';
-  document.getElementById('sm2').style.display='flex';
-  setTimeout(()=>document.getElementById('mn').focus(),100);
+// ═══════════════════════════════════════════════════
+//  SAVE MODAL
+// ═══════════════════════════════════════════════════
+document.getElementById('bsave').addEventListener('click', () => {
+  if (!pts.length) return;
+  const { a, sf, ac } = cArea(); const pe = cPerim();
+  document.getElementById('mo-a').textContent = fA(a);
+  document.getElementById('mo-sf').textContent = fSF(sf);
+  document.getElementById('mo-ac').textContent = `${ac.toFixed(4)} ac`;
+  document.getElementById('mo-pe').textContent = fD(pe);
+  document.getElementById('mn').value = '';
+  document.getElementById('modal-bg').style.display = 'flex';
+  setTimeout(() => document.getElementById('mn').focus(), 150);
 });
-document.getElementById('cnc').addEventListener('click',()=>document.getElementById('sm2').style.display='none');
-document.getElementById('sm2').addEventListener('click',e=>{if(e.target===document.getElementById('sm2'))document.getElementById('sm2').style.display='none';});
-document.getElementById('mn').addEventListener('keydown',e=>{if(e.key==='Enter')doSave();});
-document.getElementById('csv').addEventListener('click',doSave);
-document.querySelectorAll('.pb3').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.pb3').forEach(x=>x.classList.remove('ac'));
-    b.classList.add('ac');pty=b.dataset.t;
+document.getElementById('cnc').addEventListener('click', () => document.getElementById('modal-bg').style.display = 'none');
+document.getElementById('modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-bg')) document.getElementById('modal-bg').style.display = 'none';
+});
+document.getElementById('mn').addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); });
+document.getElementById('csv').addEventListener('click', doSave);
+document.querySelectorAll('.type-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.type-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); pty = b.dataset.t;
   });
 });
 
-function doSave(){
-  const nm=document.getElementById('mn').value.trim();if(!nm)return;
-  const{a,ac,ha,sf,gu}=cArea();const pe=cPerim();
-  const m={id:uid(),name:nm,pt:pty,pts:JSON.parse(JSON.stringify(pts)),a,ac,ha,sf,gu,perimeter:pe,ts:Date.now()};
-  meas.push(m);try{localStorage.setItem('glmp6',JSON.stringify(meas));}catch(e){}
-  document.getElementById('sm2').style.display='none';if(svOpen)rSL();
+function doSave() {
+  const nm = document.getElementById('mn').value.trim();
+  if (!nm) { document.getElementById('mn').focus(); return; }
+  const { a, ac, ha, sf, gu } = cArea(); const pe = cPerim();
+  const m = { id:uid(), name:nm, pt:pty, pts:JSON.parse(JSON.stringify(pts)), a, ac, ha, sf, gu, perimeter:pe, ts:Date.now() };
+  meas.push(m);
+  try { localStorage.setItem('glmp7', JSON.stringify(meas)); } catch(e) {}
+  document.getElementById('modal-bg').style.display = 'none';
+  if (svOpen) rSL();
 }
-function loadM(id){
-  const m=meas.find(x=>x.id===id);if(!m)return;
-  mkMap.forEach(mk=>map.removeLayer(mk));mkMap.clear();
-  if(poly){map.removeLayer(poly);poly=null;}if(pline){map.removeLayer(pline);pline=null;}
-  dls.forEach(l=>map.removeLayer(l));dls.length=0;als.forEach(l=>map.removeLayer(l));als.length=0;
-  pts=JSON.parse(JSON.stringify(m.pts));selId=null;renderAll();
-  if(pts.length){
-    const mLa=pts.reduce((s,p)=>s+p.lat,0)/pts.length;
-    const mLn=pts.reduce((s,p)=>s+p.lng,0)/pts.length;
-    map.flyTo([mLa,mLn],18,{duration:1.2});
+
+function loadM(id) {
+  const m = meas.find(x => x.id === id); if (!m) return;
+  mkMap.forEach(mk => map.removeLayer(mk)); mkMap.clear();
+  if (poly) { map.removeLayer(poly); poly = null; }
+  if (pline) { map.removeLayer(pline); pline = null; }
+  dls.forEach(l => map.removeLayer(l)); dls.length = 0;
+  als.forEach(l => map.removeLayer(l)); als.length = 0;
+  pts = JSON.parse(JSON.stringify(m.pts)); selId = null;
+  renderAll();
+  if (pts.length) {
+    const mLa = pts.reduce((s,p) => s+p.lat, 0) / pts.length;
+    const mLn = pts.reduce((s,p) => s+p.lng, 0) / pts.length;
+    map.flyTo([mLa, mLn], 18);
   }
   closeSV();
 }
-function expM(id){
-  const m=meas.find(x=>x.id===id);if(!m)return;const sf=m.sf||m.a*10.7639;
-  const lines=[
-    '=================================================',
-    '   GPS LAND MEASURE PRO — FIELD REPORT',
-    '=================================================','',
-    `Property   : ${m.name}`,`Type       : ${m.pt}`,
-    `Date       : ${new Date(m.ts).toLocaleString('en-IN')}`,`Reference  : ${m.id}`,'',
-    `Area (m²)  : ${m.a.toFixed(4)}`,`Sq. Feet   : ${sf.toFixed(2)}`,
-    `Acres      : ${m.ac.toFixed(6)}`,`Hectares   : ${m.ha.toFixed(6)}`,
-    `Gunta      : ${(m.gu||m.a/101.17).toFixed(4)}`,`Perimeter  : ${m.perimeter.toFixed(2)} m`,'',
-    '----- BOUNDARY COORDINATES (WGS84) -----',
-    ...m.pts.map((p,i)=>`[${i+1}] Lat:${p.lat.toFixed(8)} Lng:${p.lng.toFixed(8)}`),
-    '','⚠ Verify with licensed surveyor for legal use.',
-    'GPS Land Measure Pro','================================================='
+
+function expM(id) {
+  const m = meas.find(x => x.id === id); if (!m) return;
+  const sf = m.sf || m.a * 10.7639;
+  const lines = [
+    '╔═══════════════════════════════════════════════════╗',
+    '║         GPS LAND MEASURE PRO — FIELD REPORT       ║',
+    '╚═══════════════════════════════════════════════════╝', '',
+    `  Property   : ${m.name}`,
+    `  Type       : ${m.pt}`,
+    `  Date       : ${new Date(m.ts).toLocaleString('en-IN')}`,
+    `  Reference  : ${m.id}`, '',
+    '  ─── MEASUREMENTS ───────────────────────────────────',
+    `  Area       : ${m.a.toFixed(4)} m²`,
+    `  Sq. Feet   : ${sf.toFixed(2)} sq ft`,
+    `  Acres      : ${m.ac.toFixed(6)} acres`,
+    `  Hectares   : ${m.ha.toFixed(6)} ha`,
+    `  Gunta      : ${(m.gu||m.a/101.17).toFixed(4)} Gunta`,
+    `  Perimeter  : ${m.perimeter.toFixed(2)} m  (${(m.perimeter/1000).toFixed(4)} km)`,
+    `  Points     : ${m.pts.length}`, '',
+    '  ─── BOUNDARY COORDINATES (WGS84 / GPS) ─────────────',
+    ...m.pts.map((p,i) => `  [${String(i+1).padStart(2,'0')}]  Lat: ${p.lat.toFixed(8)}   Lng: ${p.lng.toFixed(8)}`),
+    '', '  ⚠  For legal/official purposes, verify with a',
+    '     licensed land surveyor. Accuracy ±3–15 meters.',
+    '  ─────────────────────────────────────────────────────',
+    '  GPS Land Measure Pro  |  amitbhardwajarch.github.io',
+    '═════════════════════════════════════════════════════'
   ];
-  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download=`${m.pt}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}.txt`;
-  a.click();URL.revokeObjectURL(url);
+  const blob = new Blob([lines.join('\n')], { type:'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${m.pt}_${m.name.replace(/[^a-z0-9]/gi,'_').slice(0,30)}_Report.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
-function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-document.addEventListener('click',()=>{res.style.display='none';document.getElementById('ld').style.display='none';});
-document.getElementById('sw').addEventListener('click',e=>e.stopPropagation());
-document.getElementById('lw').addEventListener('click',e=>e.stopPropagation());
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-initMap();updUI();
+// Close menus on outside click
+document.addEventListener('click', () => {
+  resCont.style.display = 'none';
+  document.getElementById('ld').style.display = 'none';
+});
+document.getElementById('sw').addEventListener('click', e => e.stopPropagation());
+document.getElementById('lw').addEventListener('click', e => e.stopPropagation());
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+initMap();
+updUI();
 </script>
 </body>
 </html>
